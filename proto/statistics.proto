@@ -1,0 +1,179 @@
+/* Copyright (c) 2016 Supreeth herle <s.herle@create-net.org>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * This file carries the definition of the statistics related messages
+ * exchanged between an Empower agent and an Empower controller.
+*/
+
+syntax = "proto2";
+
+import "configs.proto";
+
+///////////////////////////////////////////////////////////////////////////////
+//								ENUMS										//
+///////////////////////////////////////////////////////////////////////////////
+
+//
+// RAT types for RRC measurements. For now only EUTRAN measurement is supported.
+//
+enum rat_type {
+	// EUTRA.
+	RAT_EUTRA = 0;
+	// UTRA.
+	//RAT_UTRA = 1;
+	// GERAN.
+	//RAT_GERAN = 2;
+	// UTRA.
+	//RAT_UTRA = 3;
+	// CDMA2000.
+	//RAT_CDMA2000 = 4;
+}
+
+//
+// Statistics request status.
+//
+enum stats_req_status {
+	// Request was successfully processed.
+	SREQS_SUCCESS = 0;
+	// Could not process the request.
+	SREQS_FAILURE = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// 																			//
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+//								MESSAGES									//
+///////////////////////////////////////////////////////////////////////////////
+
+//
+// Message definition for RRC measurements request.
+//
+message rrc_meas_req {
+	// Radio Network Temporary Identifier (RNTI) of UE.
+	required uint32 rnti = 1;
+	// Radio Access Technology of the measurements.
+	required rat_type rat = 2;
+	// Measurement identifier to add/mod/remove measurements.
+	required int32 measId = 3 [default = 0];
+	// Measurement object configuration to add/mod/remove.
+	optional meas_object m_obj = 4;
+	// Measurement report configuration to add/mod/remove.
+	optional report_config r_conf = 5;
+}
+
+//
+// Message definition for Public land mobile network identifier.
+//
+message plmn_identity {
+	// Mobile Network Code (MNC).
+	optional uint32 mnc = 1;
+	// Mobile Country Code (MCC).
+	optional uint32 mcc = 2;
+}
+
+//
+// Message definition for EUTRA Cell Global Identity.
+//
+message cell_global_id_EUTRA {
+	// Public land mobile network identifier of neighbor cell.
+	optional plmn_identity plmn_id = 1;
+	// Cell identifier of neighbor cell.
+	optional uint32 cell_id = 2;
+}
+
+//
+// Message definition for neighboring EUTRA cell CGI
+// measurements.
+//
+message EUTRA_cgi_measurements {
+	// EUTRA Cell Global Identity (CGI).
+	optional cell_global_id_EUTRA cgi = 1;
+	// Tracking area code of the neighbor cell.
+	optional uint32 tracking_area_code = 2;
+	// Public land mobile network identifiers of neighbor cell.
+	repeated plmn_identity plmn_id = 3;
+}
+
+//
+// Message definition for neighboring EUTRA cell reference signal measurements.
+//
+message EUTRA_ref_signal_meas {
+	// Neighboring Cell Reference Signal Received Power (RSRP).
+	optional int32 rsrp = 1;
+	// Neighboring Cell Reference Signal Received Quality (RSRQ).
+	optional int32 rsrq = 2;
+	// some more extensions for release 9 (to be added later)
+}
+
+//
+// Message definition for neighboring EUTRA cell measurements.
+//
+message EUTRA_measurements {
+	// Physical Cell identifier.
+	optional uint32 phys_cell_id = 1;
+	// EUTRA Cell Global Identity (CGI) measurement.
+	optional EUTRA_cgi_measurements cgi_meas = 2;
+	// EUTRA nearby cell reference signal measurement.
+	optional EUTRA_ref_signal_meas meas_result = 3;
+	// UE Rx Tx Time Difference. (Rel 9. devices only)
+	//optional EUTRA_ue_rxtx_time_diff time_diff = 4;
+}
+
+//
+// Message definition for neighboring cell measurements.
+//
+message neigh_cells_measurements {
+	// Neighboring EUTRA cells measurements.
+	repeated EUTRA_measurements EUTRA_meas = 1;
+	//repeated UTRA_measurements UTRA_meas = 2;
+	//repeated GERAN_measurements GERAN_meas = 3;
+	//repeated CDMA2000_measurements CDMA2000_meas = 4;
+	// For now only EUTRAN measurements are supported
+}
+
+//
+// Message definition for RRC measurements reply.
+//
+message rrc_meas_repl {
+	// Radio Network Temporary Identifier (RNTI) of UE.
+	required uint32 rnti = 1;
+	// Measurement request status. Failure or Success.
+	required stats_req_status status = 2;
+	// Measurement identifier.
+	optional int32 measId = 3;
+	// Primary Cell Reference Signal Received Power (RSRP).
+	optional int32 PCell_rsrp = 4;
+	// Primary Cell Reference Signal Received Quality (RSRQ).
+	optional int32 PCell_rsrq = 5;
+	// Neighboring cells measurements performed by UE.
+	optional neigh_cells_measurements neigh_meas = 6;
+}
+
+//
+// RRC measurements message : Triggered event type.
+//
+message rrc_meas {
+	// Types of rrc meassurement messages.
+	oneof rrc_meas_m {
+		// Request message for RRC measurements.
+		rrc_meas_req req = 1;
+		// Reply message with RRC measurements.
+		rrc_meas_repl repl = 2;
+	}
+}

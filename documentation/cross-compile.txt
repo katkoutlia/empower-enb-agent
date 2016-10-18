@@ -20,7 +20,8 @@ distributions, but it's not hard to adapt them to your current OS.
     
 Google Protocol Buffer (GPB)
   We assume that the host machine already have a GPB built for local testing of 
-  the produced protocol files.
+  the produced protocol files. This is necessary because the '--with-protoc'
+  needs a compatible compiler that executes the necessary tests.
   The following commands will install GPB in a 'target_directory':
 
       ./autogen.sh
@@ -40,7 +41,6 @@ Protoc-c
       LDFLAGS='-L<target_dir>/lib' ./configure --host=arm-linux    \
           CC=arm-linux-gnueabihf-gcc                               \
           CXX=arm-linux-gnueabihf-g++                              \
-          --with-protoc=/usr/local/bin/protoc                      \
           --prefix=<target_directory>
       make
       make install

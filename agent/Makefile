@@ -58,7 +58,7 @@ install:
 	cp ./libemagent.so $(INSTDIR)
 	mkdir -p $(INCLDIR) 
 	cp -r ../include/* $(INCLDIR)/
-	cp -r ../conf/empower /etc
+	cp -r ../conf/empower $(CONFDIR)
 	
 uninstall:
 	rm $(INSTDIR)/libemagent.so

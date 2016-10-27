@@ -44,7 +44,7 @@ struct em_agent_ops {
 	 *
 	 * Reporting an error during initialization stages cause the agent to
 	 * fail.
-	 * 
+	 *
 	 * Returns 0 on success, a negative error code otherwise.
 	 */
 	int (* init) (void);
@@ -81,7 +81,7 @@ struct em_agent_ops {
 	int (* RRC_measurements) (
 		EmageMsg * request, EmageMsg ** reply, unsigned int trigger_id);
 
-	/* Informs the stack that a RRC measurement reconfiguration request has
+	/* Informs the stack that a RRC measurement configuration request has
 	 * been issued by the controller for this base station.
 	 *
 	 * Returns 0 on success, a negative error code otherwise.
@@ -94,7 +94,7 @@ struct em_agent_ops {
  * not. This is useful to avoid doing some heavy operation and just being denied
  * at the end.
  *
- * Retuns 1 is the trigger is enabled, 0 otherwise.
+ * Returns 1 if the trigger is enabled, 0 otherwise.
  */
 int em_has_trigger(int enb_id, int tid, int ttype);
 

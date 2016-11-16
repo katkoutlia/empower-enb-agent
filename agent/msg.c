@@ -76,7 +76,7 @@ int msg_parse_hello(int seq, int bid, char ** buf, int * size) {
 	hdr.t_id = 0;
 	hdr.b_id = bid;
 
-	hrepl.period = 0;
+	hrepl.period = 1000;
 
 	hello.hello_m_case = HELLO__HELLO_M_REPL;
 	hello.repl = &hrepl;

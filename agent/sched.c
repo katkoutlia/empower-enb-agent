@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 Kewin Rausch <kewin.rausch@create-net.org>
+/* Copyright (c) 2016 Kewin Rausch
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,6 +94,48 @@ int sched_perform_send(struct agent * a, struct sched_job * job) {
 	if(sent < 0) {
 		EMDBG("Sending Hello failed!");
 		return JOB_NET_ERROR;
+	}
+
+	return JOB_CONSUMED;
+}
+
+/* This has to be used only in case of trigger events. */
+int sched_perform_cell_tstats(struct agent * a, struct sched_job * job) {
+	struct trigger * t = (struct trigger*)job->args;
+	EmageMsg * reply = 0;
+
+	if(a->ops->cell_statistics_report) {
+		a->ops->cell_statistics_report(t->req, &reply, t->id);
+	}
+
+	/* Something to say at the controller? */
+	if(reply) {
+		sched_send_msg(a, reply);
+		emage_msg__free_unpacked(reply, 0);
+	}
+
+	return JOB_CONSUMED;
+}
+
+int sched_perform_ctrl_cmd(struct agent * a, struct sched_job * job) {
+	EmageMsg * msg   = (EmageMsg *)job->args;
+	EmageMsg * reply = 0;
+
+	switch(msg->se->mctrl_cmds->req->ctrl_cmd_case) {
+	case CONTROLLER_COMMANDS_REQ__CTRL_CMD_CTRL_HO:
+		/* Inform the stack of the hand-over request. */
+		if(a->ops->handover_request) {
+			a->ops->handover_request(msg, &reply);
+		}
+
+		if(reply) {
+			sched_send_msg(a, reply);
+			emage_msg__free_unpacked(reply, 0);
+		}
+
+		break;
+	default:
+		EMDBG("Unknown controller command detected");
 	}
 
 	return JOB_CONSUMED;
@@ -245,6 +287,12 @@ int sched_perform_job(
 		break;
 	case JOB_TYPE_RRC_MCON_TRIGGER:
 		status = sched_perform_RRC_mcon(a, job);
+		break;
+	case JOB_TYPE_CELL_STATS_TRIGGER:
+		status = sched_perform_cell_tstats(a, job);
+		break;
+	case JOB_TYPE_CTRL_COMMAND:
+		status = sched_perform_ctrl_cmd(a, job);
 		break;
 	default:
 		EMDBG("Unknown job cannot be performed, type=%d", job->type);

@@ -41,9 +41,9 @@ all:
 	$(CC) -shared -o libemagent.so *.o  
 	
 clean:
-	rm -r ./*.o
-	rm -r ./*.a
-	rm -r ./*.so
+	rm -f ./*.o
+	rm -f ./*.a
+	rm -f ./*.so
 	
 debug:
 	$(CC) $(INCLUDES) -c -fpic -DEM_DEBUG				\

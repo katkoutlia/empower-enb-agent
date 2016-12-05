@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 Kewin Rausch <kewin.rausch@create-net.org>
+/* Copyright (c) 2016 Kewin Rausch
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ int initialized = 0;
 /* Configuration of the agent. */
 struct config_profile em_conf = {0};
 
-/* Agent which are actually actives. */
+/* Agents which are actually active. */
 LIST_HEAD(em_agents);
 /* Lock for handling the agents list. */
 pthread_spinlock_t em_agents_lock;

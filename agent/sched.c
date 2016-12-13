@@ -54,6 +54,7 @@ int sched_send_msg(struct agent * a, EmageMsg * msg) {
 
 	int blen = 0;
 	int sent = 0;
+	int ret  = 0;
 
 	msg->head->seq  = net_next_seq(&a->net);
 
@@ -64,10 +65,11 @@ int sched_send_msg(struct agent * a, EmageMsg * msg) {
 	sent = net_send(&a->net, buf, blen);
 
 	if(sent < 0) {
-		return -1;
+		ret = -1;
 	}
 
-	return 0;
+	free(buf);
+	return ret;
 }
 
 /******************************************************************************
@@ -79,6 +81,7 @@ int sched_perform_send(struct agent * a, struct sched_job * job) {
 
 	int blen = 0;
 	int sent = 0;
+	int ret  = JOB_CONSUMED;
 
 	EmageMsg * msg = (EmageMsg *)job->args;
 
@@ -93,10 +96,11 @@ int sched_perform_send(struct agent * a, struct sched_job * job) {
 
 	if(sent < 0) {
 		EMDBG("Sending Hello failed!");
-		return JOB_NET_ERROR;
+		ret = JOB_NET_ERROR;
 	}
 
-	return JOB_CONSUMED;
+	free(buf);
+	return ret;
 }
 
 /* This has to be used only in case of trigger events. */
@@ -143,8 +147,10 @@ int sched_perform_ctrl_cmd(struct agent * a, struct sched_job * job) {
 
 int sched_perform_hello(struct agent * a, struct sched_job * job) {
 	char * buf = 0;
+
 	int blen = 0;
 	int sent = 0;
+	int ret  = JOB_CONSUMED;
 
 	if(msg_parse_hello(net_next_seq(&a->net), a->b_id, &buf, &blen)) {
 		EMLOG("Could not parse Hello message.");
@@ -155,9 +161,10 @@ int sched_perform_hello(struct agent * a, struct sched_job * job) {
 
 	if(sent < 0) {
 		EMDBG("Sending Hello failed!");
-		return JOB_NET_ERROR;
+		ret = JOB_NET_ERROR;
 	}
 
+	free(buf);
 	return JOB_CONSUMED;
 }
 

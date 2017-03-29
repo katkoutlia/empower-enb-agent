@@ -28,8 +28,8 @@ Take in account that, in order to run the agent, you must prepare a configuratio
 
 ### The Team
 Here a list of the maintainers of such project:
-* Herle Supreeth, <s.herle@create-net.org>
-* Rausch Kewin, <kewin.rausch@create-net.org>
+* Herle Supreeth, <s.herle@fbk.eu>
+* Rausch Kewin, <krausch@fbk.eu>
 
 ### License
 In the case you didn't get enough in the header and source files, let me say it again:

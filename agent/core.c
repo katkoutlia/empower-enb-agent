@@ -112,25 +112,6 @@ int em_has_trigger(int enb_id, int tid, int ttype) {
 	return t ? 1 : 0;
 }
 
-int em_init(void) {
-	if(!initialized) {
-		/* Initialize locking. */
-		pthread_spin_init(&em_agents_lock, 0);
-
-		if(em_load_config(EM_CONFIG_FILE, &em_conf)) {
-			EMLOG("No configuration file...");
-			return -1;
-		}
-
-		EMDBG("Configuration file loaded successfully...");
-
-		/* Don't perform initialization again. */
-		initialized = 1;
-	}
-
-	return 0;
-}
-
 /* Read the configuration file and set the globals properly. Returns a negative
  * error number on error.
  */
@@ -177,6 +158,25 @@ int em_load_config(char * config_path, struct config_profile * config) {
 	config->ctrl_port = atoi(token);
 
 	close(fd);
+	return 0;
+}
+
+int em_init(void) {
+	if(!initialized) {
+		/* Initialize locking. */
+		pthread_spin_init(&em_agents_lock, 0);
+
+		if(em_load_config(EM_CONFIG_FILE, &em_conf)) {
+			EMLOG("No configuration file...");
+			return -1;
+		}
+
+		EMDBG("Configuration file loaded successfully...");
+
+		/* Don't perform initialization again. */
+		initialized = 1;
+	}
+
 	return 0;
 }
 

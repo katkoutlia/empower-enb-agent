@@ -19,7 +19,10 @@
 
 #include <stdlib.h>
 
+#include <pthread.h>
+
 #include <emlog.h>
+#include <emage/pb/main.pb-c.h>
 
 #include "triggers.h"
 

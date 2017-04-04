@@ -548,7 +548,7 @@ void * net_loop(void * args) {
 					"msg=%d, recv=%d", mlen, bread);
 
 				/* Ok, this is serious, since we can loose the
-				 * alignment of the 4 firsts bytes which 
+				 * alignment of the 4 firsts bytes which
 				 * contains the message size.
 				 *
 				 * Cloasing the socket here cause the Hello to

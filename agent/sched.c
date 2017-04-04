@@ -147,7 +147,6 @@ int sched_perform_ctrl_cmd(struct agent * a, struct sched_job * job) {
 
 int sched_perform_hello(struct agent * a, struct sched_job * job) {
 	char * buf = 0;
-
 	int blen = 0;
 	int sent = 0;
 	int ret  = JOB_CONSUMED;

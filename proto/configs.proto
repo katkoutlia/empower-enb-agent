@@ -583,7 +583,7 @@ message active_ue {
 	// IMSI of UE.
 	optional uint64 imsi = 2;
 	// PLMN ID of CN to which UE is connected.
-	optional uint32 plmn_id = 3;
+	required uint32 plmn_id = 3;
 }
 
 //
@@ -595,7 +595,7 @@ message inactive_ue {
 	// IMSI of UE.
 	optional uint64 imsi = 2;
 	// PLMN ID of CN to which UE is attached.
-	optional uint32 plmn_id = 3;
+	required uint32 plmn_id = 3;
 }
 
 //

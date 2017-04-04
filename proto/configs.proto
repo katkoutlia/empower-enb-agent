@@ -634,7 +634,7 @@ message eNB_cells_req {
 //
 // Message definition for cell.
 //
-message cell_info {
+message cell_information {
 	// Physical cell id.
 	required uint32 phys_cell_id = 1;
 	// Operating frequency (MHz).
@@ -643,10 +643,10 @@ message cell_info {
 
 //
 // Reply to a request of cell information.
-// 
+//
 message eNB_cells_repl {
 	// Information about the eNB cells.
-	repeated cell_info cells = 1;	
+	repeated cell_information cells = 1;
 }
 
 //

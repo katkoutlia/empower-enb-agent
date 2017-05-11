@@ -551,8 +551,8 @@ message ue_rrc_meas_conf_repl {
 	repeated report_config r_conf = 8;
 	// Measurement identifers.
 	repeated meas_identifier meas_id = 9;
-	// Operating frequency (MHz) of the UE's primary serving cell.
-	optional float freq = 10;
+	// Operating frequency (EARFCN) of the UE's primary serving cell.
+	optional uint32 freq = 10;
 	// UE's primary serving cell FDD or TDD.
 	optional DD_mode pcell_DD = 11;
 }
@@ -641,7 +641,7 @@ message eNB_cells_req {
 message cell_information {
 	// Physical cell id.
 	required uint32 phys_cell_id = 1;
-	// Operating frequency (MHz).
+	// Operating frequency (EARFCN value).
 	required uint32 carrier_freq = 2;
 	// Total number of Resource Blocks in a particular cell in Downlink.
 	optional uint32 num_rbs_dl = 3;

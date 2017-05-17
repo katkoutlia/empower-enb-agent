@@ -417,6 +417,8 @@ int sched_consume(struct sched_context * sched) {
 			pthread_spin_unlock(&sched->lock);
 /****** UNLOCK ****************************************************************/
 
+			tr_flush(&a->trig);
+
 			/* Signal the connection down now.
 			 * We do it here since we are sure we cleaned all the
 			 * jobs, and eventual new job(from a new successful

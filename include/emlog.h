@@ -20,6 +20,10 @@
 #ifndef __EMAGE_LOG_H
 #define __EMAGE_LOG_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdio.h>
 
 /* Comment this to remove debugging logs. */
@@ -38,6 +42,10 @@
 #else
 /* Debugging routine. */
 #define EMDBG(x, ...)
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

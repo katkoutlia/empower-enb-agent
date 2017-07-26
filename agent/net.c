@@ -664,7 +664,6 @@ sleep:
 }
 
 int net_start(struct net_context * net) {
-	/* 1 second interval by default. */
 	net->interval = 100;
 
 	pthread_spin_init(&net->lock, 0);

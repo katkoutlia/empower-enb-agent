@@ -575,7 +575,7 @@ out:
 }
 
 int sched_start(struct sched_context * sched) {
-	sched->interval = 1;
+	sched->interval = 500;
 
 	INIT_LIST_HEAD(&sched->jobs);
 	INIT_LIST_HEAD(&sched->todo);

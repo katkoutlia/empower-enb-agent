@@ -31,7 +31,8 @@ all:
 	
 protolib:
 	$(CC) -I./pb -c -fpic ./pb/*.pb-c.c
-	$(CC) -shared -o libemproto.so *.pb-c.o  
+	$(CC) -I./pb -c -fpic ./emproto.c
+	$(CC) -shared -o libemproto.so *.pb-c.o ./emproto.o  
 
 proto:
 	mkdir -p $(PROTO-OUT)
@@ -46,9 +47,11 @@ clean:
 install:
 	cp ./libemproto.so $(INSTDIR)
 	mkdir -p $(INCLDIR)/pb/
+	cp  ./emproto.h $(INCLDIR)
 	cp -r ./pb/*.h $(INCLDIR)/pb/
-	
+		
 uninstall:
 	rm $(INSTDIR)/libemproto.so
+	rm $(INCLDIR)/emproto.h
 	rm -r $(INCLDIR)/pb
 	

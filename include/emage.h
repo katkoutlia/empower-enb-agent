@@ -118,8 +118,9 @@ struct em_agent_ops {
 		EmageMsg * request, EmageMsg ** reply, unsigned int trigger_id);
 
 
-	/* Informs that the controller required to report about some kind of
-	 * information regarding the eNB cells.
+	/* Informs that the controller required to report about the eNB
+	 * configuration, to gather generic information about how the base
+	 * station is operating.
 	 *
 	 * Return 0 on success, a negative error code otherwise.
 	 */

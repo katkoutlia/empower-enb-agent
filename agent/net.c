@@ -194,8 +194,10 @@ int net_connect_to_controller(struct net_context * net) {
 }
 
 /* Receive data. */
-int net_recv(struct net_context * context, char * buf, unsigned int size) {
-	return recv(context->sockfd, buf, size, MSG_DONTWAIT | MSG_NOSIGNAL);
+int net_recv(
+	struct net_context * context, char * buf, unsigned int size, int flags)
+{
+	return recv(context->sockfd, buf, size, flags);
 }
 
 /* Send data. */
@@ -610,8 +612,8 @@ void * net_loop(void * args) {
 				net_connected(net);
 			}
 		}
-
-		bread = net_recv(net, buf, 4);
+again:
+		bread = net_recv(net, buf, 4, MSG_DONTWAIT | MSG_NOSIGNAL);
 
 		/* Something has been received.
 		 * NOTE: Message must be at least 4 bytes long.
@@ -620,7 +622,7 @@ void * net_loop(void * args) {
 			memcpy(&mlen, buf, 4);
 			mlen = ntohl(mlen);
 
-			bread = net_recv(net, buf, mlen);
+			bread = net_recv(net, buf, mlen, MSG_NOSIGNAL);
 
 			if (bread != mlen) {
 				EMLOG("Malformed message received, "
@@ -647,6 +649,9 @@ void * net_loop(void * args) {
 			} else {
 				EMLOG("Failed to decode the message!");
 			}
+
+			/* Continue to process eventual queued messages. */
+			goto again;
 		}
 
 sleep:

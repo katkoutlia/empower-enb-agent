@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 Kewin Rausch
+/* Copyright (c) 2017 Kewin Rausch
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,12 @@
  * limitations under the License.
  */
 
-/*
- *  Empower Agent messages handling procedures.
- */
+#ifndef __EMAGE_PROTOCOLS_DIRECTION_H
+#define __EMAGE_PROTOCOLS_DIRECTION_H
 
-#ifndef __EMAGE_LOG_H
-#define __EMAGE_LOG_H
+typedef enum __ep_direction_type {
+	EP_DIR_REQUEST = 0,     /* Request issued */
+	EP_DIR_REPLY,           /* Reply issued */
+} ep_dir_type;
 
-#include <stdio.h>
-
-/* Log routine for every feedback. */
-#define EMLOG(x, ...)                                                   \
-	printf("emage: "x"\n", ##__VA_ARGS__)
-
-#ifdef EM_DEBUG
-/* Debugging routine. */
-#define EMDBG(x, ...)                                                   \
-	printf("emage-debug:"x"\n", ##__VA_ARGS__)
-#else
-/* Debugging routine. */
-#define EMDBG(x, ...)
-#endif
-
-#endif
+#endif /* __EMAGE_PROTOCOLS_DIRECTION_H */

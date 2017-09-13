@@ -22,12 +22,16 @@
 #include <pthread.h>
 
 #include <emlog.h>
-#include <emage/pb/main.pb-c.h>
+#include <emproto.h>
 
 #include "triggers.h"
 
 struct trigger * tr_add(
-	struct tr_context * tc, int id, int type, EmageMsg * req) {
+	struct tr_context * tc,
+	int id,
+	int type,
+	char * req,
+	unsigned char size) {
 
 	struct trigger * t = tr_has_trigger(tc, id, type);
 
@@ -44,9 +48,10 @@ struct trigger * tr_add(
 	}
 
 	INIT_LIST_HEAD(&t->next);
-	t->id = id;
+	t->id   = id;
 	t->type = type;
-	t->req = req;
+	t->req  = req;
+	t->size = size;
 
 /****** LOCK ******************************************************************/
 	pthread_spin_lock(&tc->lock);
@@ -112,7 +117,7 @@ int tr_rem(struct tr_context * tc, int id, int type) {
 			list_del(&t->next);
 
 			if(t->req) {
-				emage_msg__free_unpacked(t->req, 0);
+				free(t->req);
 			}
 
 			free(t);

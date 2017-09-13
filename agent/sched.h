@@ -14,7 +14,7 @@
  */
 
 /*
- * Empower Agent internal scheduler logic.
+ * Empower Agent internal scheduler logic
  */
 
 #ifndef __EMAGE_SCHEDULER_H
@@ -25,11 +25,14 @@
 
 #include "emlist.h"
 
-/* Possible types of jobs to issue in the scheduler. */
+/* Possible types of jobs to issue in the scheduler */
 enum JOB_TYPES {
 	JOB_TYPE_INVALID = 0,
 	JOB_TYPE_SEND,
 	JOB_TYPE_HELLO,
+	JOB_TYPE_ENB_SETUP,
+	JOB_TYPE_CELL_SETUP,
+#if 0
 	JOB_TYPE_ENB_CELLS,
 	JOB_TYPE_ENB_CONFIG_REQ,
 	JOB_TYPE_UE_CONFIG_REQ,
@@ -39,58 +42,62 @@ enum JOB_TYPES {
 	JOB_TYPE_CELL_STATS_TRIGGER,
 	JOB_TYPE_CTRL_COMMAND,
 	JOB_TYPE_RAN_SHARING,
+#endif
 };
 
-/* Job for agent scheduler. */
+/* Job for agent scheduler */
 struct sched_job {
-	/* Member of a list. */
+	/* Member of a list */
 	struct list_head next;
 
-	/* Id of this job. */
+	/* Id of this job */
 	unsigned int id;
-	/* Type of job scheduled. */
+	/* Type of job scheduled */
 	int type;
 
-	/* Data arguments for this job. */
+	/* Data arguments for this job */
 	void * args;
+	/* Eventual size for the arguments */
+	unsigned int size;
+
 	/* This variable contains the number of time a message will be
 	 * rescheduled; -1 cause the job to be re-scheduled forever.
 	 */
 	int reschedule;
 
-	/* Time when the job has been enqueued. */
+	/* Time when the job has been enqueued */
 	struct timespec issued;
-	/* time in 'ms' after that the job will be run. */
+	/* time in 'ms' after that the job will be run */
 	int elapse;
 };
 
 struct sched_context {
-	/* A value different than 0 stop this listener. */
+	/* A value different than 0 stop this listener */
 	int stop;
 
-	/* Jobs actually active in the scheduler. */
+	/* Jobs actually active in the scheduler */
 	struct list_head jobs;
-	/* Jobs to do but not scheduled for this run. */
+	/* Jobs to do but not scheduled for this run */
 	struct list_head todo;
 
-	/* Thread in charge of this listening. */
+	/* Thread in charge of this listening */
 	pthread_t thread;
-	/* Lock for elements of this context. */
+	/* Lock for elements of this context */
 	pthread_spinlock_t lock;
-	/* Time to wait at the end of each loop, in ms. */
+	/* Time to wait at the end of each loop, in ms */
 	unsigned int interval;
 };
 
-/* Adds a job to a scheduler context. */
+/* Adds a job to a scheduler context */
 int sched_add_job(struct sched_job * job, struct sched_context * sched);
 
-/* Release a job which is currently scheduled by using the associated id. */
+/* Release a job which is currently scheduled by using the associated id */
 int sched_remove_job(unsigned int id, int type, struct sched_context * sched);
 
-/* Correctly start a new scheduler in it's own context. */
+/* Correctly start a new scheduler in it's own context */
 int sched_start(struct sched_context * sched);
 
-/* Stop a scheduler. */
+/* Stop a scheduler */
 int sched_stop(struct sched_context * sched);
 
 #endif /* __EMAGE_SCHEDULER_H */

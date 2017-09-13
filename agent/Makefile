@@ -32,11 +32,10 @@ LIBS=-lpthread -lprotobuf-c
 INCLUDES=-I../include
 
 all:
-	$(CC) $(INCLUDES) -c -fpic					\
-		$(AGENTP)/msg.c 					\
-		$(AGENTP)/net.c						\
-		$(AGENTP)/sched.c 					\
-		$(AGENTP)/triggers.c 					\
+	$(CC) $(INCLUDES) -c -fpic                                      \
+		$(AGENTP)/net.c                                         \
+		$(AGENTP)/sched.c                                       \
+		$(AGENTP)/triggers.c                                    \
 		$(AGENTP)/core.c
 	$(CC) -shared -o libemagent.so *.o
 
@@ -46,21 +45,22 @@ clean:
 	rm -f ./*.so
 
 debug:
-	$(CC) $(INCLUDES) -c -fpic -DEM_DEBUG				\
-		$(AGENTP)/msg.c 					\
-		$(AGENTP)/net.c						\
-		$(AGENTP)/sched.c 					\
-		$(AGENTP)/triggers.c 					\
+	$(CC) $(INCLUDES) -c -fpic -DEM_DEBUG                           \
+		$(AGENTP)/net.c                                         \
+		$(AGENTP)/sched.c                                       \
+		$(AGENTP)/triggers.c                                    \
 		$(AGENTP)/core.c
 	$(CC) -shared -o libemagent.so *.o
 
 install:
 	cp ./libemagent.so $(INSTDIR)
 	mkdir -p $(INCLDIR)
-	cp -r ../include/* $(INCLDIR)/
+	cp -r ../include/emage.h* $(INCLDIR)/
+	cp -r ../include/emlog.h* $(INCLDIR)/
 	cp -r ../conf/empower $(CONFDIR)
 
 uninstall:
 	rm $(INSTDIR)/libemagent.so
-	rm -r $(INCLDIR)
+	rm -f $(INCLDIR)/emage.h
+	rm -f $(INCLDIR)/emlog.h
 	rm -r /etc/empower

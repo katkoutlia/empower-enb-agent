@@ -9,8 +9,6 @@ This software has been developed and tested for Linux.
 In order to successfully build EMAge you need:
 * Linux standard build suite (GCC, LD, AR, etc...).
 * Pthread library, necessary to handle multithreading.
-* Google protocol buffer (protobuf), version 3.0.0 or greater.
-* Google protocol buffer implementation for C (protobuf-c), version 1.2.1 or greater.
 
 ### Build instructions
 In order to use EMAge the necessary steps to do are:
@@ -25,11 +23,6 @@ For instruction on how to cross-compile this project for other architecture, ple
 
 ### Run the agent
 Take in account that, in order to run the agent, you must prepare a configuration file which has to be named `agent.conf` and placed under the `/etc/empower` directory. The syntax of such configuration file is, for the moment, outrageously simple, and just contains the necessary information to reach the controller. Such directory will be installed when the agent library is installed in your system, but probably you will need to change the default configuration (which points to the local machine).
-
-### The Team
-Here a list of the maintainers of such project:
-* Herle Supreeth, <s.herle@fbk.eu>
-* Rausch Kewin, <krausch@fbk.eu>
 
 ### License
 In the case you didn't get enough in the header and source files, let me say it again:

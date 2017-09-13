@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 Kewin Rausch
+/* Copyright (c) 2017 Kewin Rausch
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,21 @@
  * limitations under the License.
  */
 
-/*
- *  Empower Agent messages handling procedures.
+/*    FIRST-LEVEL TYPE OF MESSAGES
+ *
+ * This type is directly present into the master header and provides the first
+ * differentiation of the possible type of message.
  */
 
-#ifndef __EMAGE_LOG_H
-#define __EMAGE_LOG_H
+#ifndef __EMAGE_PROTOCOLS_MESSAGE_TYPE_H
+#define __EMAGE_PROTOCOLS_MESSAGE_TYPE_H
 
-#include <stdio.h>
+typedef enum __ep_message_type {
+	EP_TYPE_INVALID_MSG = 0,
+	EP_TYPE_SINGLE_MSG,
+	EP_TYPE_SCHEDULE_MSG,
+	EP_TYPE_TRIGGER_MSG,
+	EP_TYPE_EXTENDED = 0xff
+} ep_msg_type;
 
-/* Log routine for every feedback. */
-#define EMLOG(x, ...)                                                   \
-	printf("emage: "x"\n", ##__VA_ARGS__)
-
-#ifdef EM_DEBUG
-/* Debugging routine. */
-#define EMDBG(x, ...)                                                   \
-	printf("emage-debug:"x"\n", ##__VA_ARGS__)
-#else
-/* Debugging routine. */
-#define EMDBG(x, ...)
-#endif
-
-#endif
+#endif /* __EMAGE_PROTOCOLS_MESSAGE_TYPE_H */

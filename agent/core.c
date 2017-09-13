@@ -43,7 +43,7 @@
 #include "net.h"
 #include "sched.h"
 
-#include <emage/pb/main.pb-c.h>
+#include <emproto.h>
 
 /* Static location of the configuration file. */
 #define EM_CONFIG_FILE			"/etc/empower/agent.conf"
@@ -64,7 +64,8 @@ pthread_spinlock_t em_agents_lock;
  ******************************************************************************/
 
 /* Schedule the send of a message. */
-int add_send_job(struct agent * a, EmageMsg * msg) {
+int add_send_job(struct agent * a, char * msg, unsigned int size) {
+	char * buf;
 	struct sched_job * s = 0;
 
 	int status = -1;
@@ -76,16 +77,29 @@ int add_send_job(struct agent * a, EmageMsg * msg) {
 		return -1;
 	}
 
+	buf = malloc(sizeof(char) * size);
+
+	if(!buf) {
+		EMLOG("No more memory!");
+
+		free(s);
+		return -1;
+	}
+
+	memcpy(buf, msg, sizeof(char) * size);
+
 	INIT_LIST_HEAD(&s->next);
-	s->args = msg;
-	s->elapse = 1;
-	s->type = JOB_TYPE_SEND;
+	s->args       = buf;
+	s->size       = size;
+	s->elapse     = 1;
+	s->type       = JOB_TYPE_SEND;
 	s->reschedule = 0;
 
 	status = sched_add_job(s, &a->sched);
 
 	/* Some error occurs?*/
 	if(status) {
+		free(buf);
 		free(s);
 	}
 
@@ -204,7 +218,7 @@ int em_release_agent(struct agent * a) {
 	free(a);
 }
 
-int em_send(int enb_id, EmageMsg * msg) {
+int em_send(int enb_id, char * msg, unsigned int size) {
 	struct agent * a = 0;
 
 	int found = 0;
@@ -214,7 +228,7 @@ int em_send(int enb_id, EmageMsg * msg) {
 	pthread_spin_lock(&em_agents_lock);
 	list_for_each_entry(a, &em_agents, next) {
 		if(a->b_id == enb_id) {
-			status = add_send_job(a, msg);
+			status = add_send_job(a, msg, size);
 
 			break;
 		}
@@ -277,17 +291,16 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 		return -1;
 	}
 
-	/* Any check for necessary callbacks here. For the moment you can also
-	 * implement no callbacks: your agent will simply do nothing.
+	/* Any check for necessary call-backs here. For the moment you can also
+	 * implement no call-backs: your agent will simply do nothing.
 	 */
 	if(!ops) {
 		EMLOG("Invalid set of operations...");
 		return -1;
 	}
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&em_agents_lock);
-	/* Find for an already present agent. */
+	/* Find for an already present agent */
 	list_for_each_entry(a, &em_agents, next) {
 		if(a->b_id == b_id) {
 			running = 1;
@@ -295,7 +308,6 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 		}
 	}
 
-	/* New agent? */
 	if(!running) {
 		a = malloc(sizeof(struct agent));
 
@@ -304,7 +316,6 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 			INIT_LIST_HEAD(&a->next);
 			a->b_id = b_id;
 
-			/* Quickly add it to the list. */
 			list_add(&a->next, &em_agents);
 		} else {
 			nm = 1;
@@ -312,9 +323,7 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 
 	}
 	pthread_spin_unlock(&em_agents_lock);
-/****** UNLOCK ****************************************************************/
 
-	/* Duplicate? */
 	if(running) {
 		EMLOG("Agent for base station %d is already running...",
 			b_id);
@@ -322,39 +331,31 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 		return -1;
 	}
 
-	/* No memory check. */
 	if(nm) {
 		EMLOG("Not enough memory!");
 		return -1;
 	}
 
-
 	EMDBG("New agent for %d created", b_id);
 
-	/*
-	 * Finish to fill up important fields.
-	 */
 	memcpy(a->net.addr, em_conf.ctrl_ipv4_addr, 16);
 	a->net.port = em_conf.ctrl_port;
 	a->ops = ops;
 
-	/* Initialize locking for triggering mechanism. */
 	pthread_spin_init(&a->trig.lock, 0);
 	INIT_LIST_HEAD(&a->trig.ts);
 
 	if (a->ops->init) {
 		status = a->ops->init();
 
-		/* On error, do not launch the agent. */
+		/* On error, do not launch the agent */
 		if (status < 0) {
 			EMLOG("Custom initialization failed with error %d",
 				status);
 
-/****** LOCK ******************************************************************/
 			pthread_spin_lock(&em_agents_lock);
 			list_del(&a->next);
 			pthread_spin_unlock(&em_agents_lock);
-/****** UNLOCK ****************************************************************/
 
 			em_release_agent(a);
 
@@ -363,15 +364,13 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 	}
 
 	/*
-	 * Start this agent scheduler.
+	 * Start this agent scheduler
 	 */
 
 	if(sched_start(&a->sched)) {
-/****** LOCK ******************************************************************/
 		pthread_spin_lock(&em_agents_lock);
 		list_del(&a->next);
 		pthread_spin_unlock(&em_agents_lock);
-/****** UNLOCK ****************************************************************/
 
 		EMLOG("Failed to create the agent scheduler thread.");
 		em_release_agent(a);
@@ -380,15 +379,13 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 	}
 
 	/*
-	 * Start this agent networking operations.
+	 * Start this agent networking operations
 	 */
 
 	if(net_start(&a->net)) {
-/****** LOCK ******************************************************************/
 		pthread_spin_lock(&em_agents_lock);
 		list_del(&a->next);
 		pthread_spin_unlock(&em_agents_lock);
-/****** UNLOCK ****************************************************************/
 
 		EMLOG("Failed to create the listener agent thread.");
 		sched_stop(&a->sched);
@@ -404,12 +401,10 @@ int em_stop(void) {
 	struct agent * a = 0;
 
 	while(!list_empty(&em_agents)) {
-/****** LOCK ******************************************************************/
 		pthread_spin_lock(&em_agents_lock);
 		a = list_first_entry(&em_agents, struct agent, next);
 		list_del(&a->next);
 		pthread_spin_unlock(&em_agents_lock);
-/****** UNLOCK ****************************************************************/
 
 		if(a->ops->release) {
 			a->ops->release();

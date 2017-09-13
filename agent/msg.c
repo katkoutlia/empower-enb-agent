@@ -24,7 +24,7 @@
 #include <netinet/in.h>
 
 #include <emlog.h>
-#include <emage/pb/main.pb-c.h>
+#include <emproto.h>
 
 #include "msg.h"
 
@@ -58,39 +58,4 @@ int msg_parse(char ** buf, int * size, EmageMsg * msg) {
 	*size = ms + EM_MSG_LENGTH_HEADROOM;
 
 	return 0;
-}
-
-int msg_parse_hello(int seq, int bid, char ** buf, int * size) {
-	char * rb = 0;
-	int ms = 0;
-	int hr = 0;
-
-	EmageMsg msg    = EMAGE_MSG__INIT;
-	Header hdr      = HEADER__INIT;
-	SingleEvent se  = SINGLE_EVENT__INIT;
-	Hello hello     = HELLO__INIT;
-	HelloRepl hrepl = HELLO_REPL__INIT;
-
-	hdr.vers = 1;
-	hdr.seq  = seq;
-	hdr.t_id = 0;
-	hdr.b_id = bid;
-
-	hrepl.period = 1000;
-
-	hello.hello_m_case = HELLO__HELLO_M_REPL;
-	hello.repl = &hrepl;
-
-	se.events_case = SINGLE_EVENT__EVENTS_M_HELLO;
-	se.mhello = &hello;
-
-	msg.head = &hdr;
-	msg.se = &se;
-	msg.event_types_case = EMAGE_MSG__EVENT_TYPES_SE;
-
-	/*
-	 * Buffer creation and fill up.
-	 */
-
-	return msg_parse(buf, size, &msg);
 }

@@ -27,6 +27,9 @@
 /* Connected to the controller. */
 #define EM_STATUS_CONNECTED		1
 
+/* Default buffer size. */
+#define EM_BUF_SIZE			4096
+
 /* Private context of a network listener. */
 struct net_context {
 	/* Address to listen. */
@@ -41,7 +44,7 @@ struct net_context {
 	/* Status of the listener. */
 	int status;
 	/* Sequence number. */
-	int seq;
+	unsigned int seq;
 
 	/* Thread in charge of this listening. */
 	pthread_t thread;
@@ -52,7 +55,7 @@ struct net_context {
 };
 
 /* Get the next valid sequence number to emit with this context. */
-int net_next_seq(struct net_context * net);
+unsigned int net_next_seq(struct net_context * net);
 
 /* Adjust the context due a network error. */
 int net_not_connected(struct net_context * net);

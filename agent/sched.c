@@ -18,11 +18,12 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 
 #include <emage.h>
 #include <emlog.h>
-#include <emage/pb/main.pb-c.h>
+#include <emproto.h>
 
 #include "agent.h"
 #include "sched.h"
@@ -32,78 +33,75 @@
 #include "net.h"
 
 /*
- * Some states when processing jobs.
+ * Some states when processing jobs
  */
 
-#define JOB_NET_ERROR			-1
-#define JOB_CONSUMED			0
-#define JOB_NOT_ELAPSED			1
-#define JOB_RESCHEDULE			2
+#define JOB_NET_ERROR                          -1
+#define JOB_CONSUMED                            0
+#define JOB_NOT_ELAPSED                         1
+#define JOB_RESCHEDULE                          2
 
-/* Dif "b-a" two timespec structs and return such value in ms.*/
-#define ts_diff_to_ms(a, b) 			\
-	(((b->tv_sec - a->tv_sec) * 1000) +	\
+/* Dif "b-a" two timespec structs and return such value in ms*/
+#define ts_diff_to_ms(a, b)                     \
+	(((b->tv_sec - a->tv_sec) * 1000) +     \
 	 ((b->tv_nsec - a->tv_nsec) / 1000000))
 
 /******************************************************************************
- * Utilities:                                                                 *
+ * Utilities                                                                  *
  ******************************************************************************/
 
-int sched_send_msg(struct agent * a, EmageMsg * msg) {
-	char * buf = 0;
+/* Fix the last details and send the message */
+int sched_send_msg(struct agent * a, char * msg, unsigned int size)
+{
+	char     buf[EM_BUF_SIZE];
+	uint32_t ms = htonl(size);
 
-	int blen = 0;
-	int sent = 0;
-	int ret  = 0;
+	if(size + EP_PROLOGUE_SIZE > EM_BUF_SIZE) {
+		EMLOG("Message too long, msg=%u, limit=%u!",
+			size + sizeof(uint32_t),
+			EM_BUF_SIZE);
 
-	msg->head->seq  = net_next_seq(&a->net);
-
-	if(msg_parse(&buf, &blen, msg)) {
-		return 0;
-	}
-
-	sent = net_send(&a->net, buf, blen);
-
-	if(sent < 0) {
-		ret = -1;
-	}
-
-	free(buf);
-	return ret;
-}
-
-/******************************************************************************
- * Jobs(not Steve ones):                                                      *
- ******************************************************************************/
-
-int sched_perform_send(struct agent * a, struct sched_job * job) {
-	char * buf = 0;
-
-	int blen = 0;
-	int sent = 0;
-	int ret  = JOB_CONSUMED;
-
-	EmageMsg * msg = (EmageMsg *)job->args;
-
-	msg->head->seq  = net_next_seq(&a->net);
-
-	if(msg_parse(&buf, &blen, msg)) {
-		emage_msg__free_unpacked(msg, 0);
 		return JOB_CONSUMED;
 	}
 
-	sent = net_send(&a->net, buf, blen);
+	/* How long will be the message? */
+	memcpy(buf, &ms, EP_PROLOGUE_SIZE);
 
-	if(sent < 0) {
-		EMDBG("Sending Hello failed!");
-		ret = JOB_NET_ERROR;
+	/* Insert the correct sequence number before sending */
+	epf_seq(msg, size, net_next_seq(&a->net));
+
+	memcpy(buf + EP_PROLOGUE_SIZE, msg, size);
+
+	EMDBG("Sending a message of %d bytes...", size);
+
+	if(net_send(&a->net, buf, size + EP_PROLOGUE_SIZE) < 0) {
+		return JOB_NET_ERROR; /* On error */
+	} else {
+		return JOB_CONSUMED;  /* On success */
 	}
-
-	free(buf);
-	return ret;
 }
 
-int sched_perform_enb_cells(struct agent * a, struct sched_job * job) {
+/******************************************************************************
+ * Jobs                                                                       *
+ ******************************************************************************/
+
+int sched_perform_send(struct agent * a, struct sched_job * job)
+{
+	return sched_send_msg(a, job->args, job->size);
+}
+
+int sched_perform_enb_setup(struct agent * a, struct sched_job * job)
+{
+	if(a->ops && a->ops->enb_setup_request) {
+		a->ops->enb_setup_request();
+	}
+
+	return JOB_CONSUMED;
+}
+
+#if 0
+int sched_perform_enb_cells(struct agent * a, struct sched_job * job)
+{
 	EmageMsg * msg   = (EmageMsg *)job->args;
 	EmageMsg * reply = 0;
 
@@ -179,29 +177,21 @@ int sched_perform_ctrl_cmd(struct agent * a, struct sched_job * job) {
 
 	return JOB_CONSUMED;
 }
+#endif
 
 int sched_perform_hello(struct agent * a, struct sched_job * job) {
-	char * buf = 0;
+	char buf[EM_BUF_SIZE];
 	int blen = 0;
 	int sent = 0;
 	int ret  = JOB_CONSUMED;
 
-	if(msg_parse_hello(net_next_seq(&a->net), a->b_id, &buf, &blen)) {
-		EMLOG("Could not parse Hello message.");
-		return -1;
-	}
+	blen = epf_single_hello_req(buf, EM_BUF_SIZE, a->b_id, 0, 0, 0);
+	ret  = sched_send_msg(a, buf, blen);
 
-	sent = net_send(&a->net, buf, blen);
-
-	if(sent < 0) {
-		EMDBG("Sending Hello failed!");
-		ret = JOB_NET_ERROR;
-	}
-
-	free(buf);
 	return ret;
 }
 
+#if 0
 int sched_perform_RRC_mcon(struct agent * a, struct sched_job * job) {
 	struct trigger * t = (struct trigger*)job->args;
 	EmageMsg * reply = 0;
@@ -255,23 +245,20 @@ int sched_perform_UEs_report(struct agent * a, struct sched_job * job) {
 
 	return JOB_CONSUMED;
 }
+#endif
 
-int sched_release_job(struct sched_job * job) {
-	EmageMsg * msg = 0;
-
+int sched_release_job(struct sched_job * job)
+{
 	EMDBG("Releasing a %d job", job->type);
 
 	if(job->args) {
-		if(job->type == JOB_TYPE_SEND) {
-			msg = (EmageMsg *)job->args;
-
-			emage_msg__free_unpacked(msg, 0);
+		if(job->args) {
+			free(job->args);
 			job->args = 0;
 		}
 	}
 
 	free(job);
-
 	return 0;
 }
 
@@ -305,7 +292,7 @@ int sched_add_job(struct sched_job * job, struct sched_context * sched) {
 int sched_perform_job(
 	struct agent * a, struct sched_job * job, struct timespec * now) {
 
-	int status = 0;
+	int status = JOB_CONSUMED;
 	struct timespec * is = &job->issued;
 
 	/* Job not to be performed now. */
@@ -320,6 +307,10 @@ int sched_perform_job(
 	case JOB_TYPE_HELLO:
 		status = sched_perform_hello(a, job);
 		break;
+	case JOB_TYPE_ENB_SETUP:
+		status = sched_perform_enb_setup(a, job);
+		break;
+#if 0
 	case JOB_TYPE_UEs_LOG_TRIGGER:
 		status = sched_perform_UEs_report(a, job);
 		break;
@@ -341,6 +332,7 @@ int sched_perform_job(
 	case JOB_TYPE_RAN_SHARING:
 		status = sched_perform_ran_sh(a, job);
 		break;
+#endif
 	default:
 		EMDBG("Unknown job cannot be performed, type=%d", job->type);
 	}

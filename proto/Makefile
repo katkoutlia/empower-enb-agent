@@ -18,37 +18,38 @@
 #
 
 CC=gcc
-PCC=protoc-c
 
 INCLDIR=/usr/include/emage
 INSTDIR=/usr/lib
+PYDIR=$(shell python -m site --user-site)
 
-PROTO-OUT=./pb
+VERS=1
 
 all:
-	make proto
 	make protolib
 	
 protolib:
-	$(CC) -I./pb -c -fpic ./pb/*.pb-c.c
-	$(CC) -shared -o libemproto.so *.pb-c.o  
-
-proto:
-	mkdir -p $(PROTO-OUT)
-	$(PCC) ./*.proto --c_out=$(PROTO-OUT)
+	$(CC) -I../include -c -fpic ./$(VERS)/*.c
+	$(CC) -shared -o libemproto.so *.o  
 
 clean:
-	rm -rf $(PROTO-OUT)
 	rm -f ./*.o
 	rm -f ./*.a
 	rm -f ./*.so
 	
 install:
 	cp ./libemproto.so $(INSTDIR)
-	mkdir -p $(INCLDIR)/pb/
-	cp -r ./pb/*.h $(INCLDIR)/pb/
+	cp ../include/emproto.h $(INCLDIR)/
+	cp -r ../include/emproto $(INCLDIR)/
 	
 uninstall:
 	rm $(INSTDIR)/libemproto.so
-	rm -r $(INCLDIR)/pb
+	rm $(INCLDIR)/emproto.h
+	rm -r $(INCLDIR)/emproto
 	
+pyinstall:
+	mkdir -p $(PYDIR)
+	cp ./$(VERS)/emproto.py $(PYDIR)
+	
+pyuninstall:
+	rm -f $(PYDIR)/emproto.py

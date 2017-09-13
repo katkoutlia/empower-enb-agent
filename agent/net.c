@@ -17,6 +17,7 @@
  * Empower Agent internal network listener logic.
  */
 
+#include <errno.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,7 +34,7 @@
 
 #include <emage.h>
 #include <emlog.h>
-#include <emage/pb/main.pb-c.h>
+#include <emproto.h>
 
 #include "agent.h"
 #include "msg.h"
@@ -43,8 +44,8 @@
 #include "emlist.h"
 #include "sched.h"
 
-/* Default buffer size. */
-#define EM_BUF_SIZE			4096
+#define NET_RECONNECT_TIME      1000000 /* 1sec in usec */
+#define NET_WAIT_TIME           16000   /* 16ms in usec */
 
 /******************************************************************************
  * Network procedures.                                                        *
@@ -66,8 +67,8 @@ int net_connected(struct net_context * net) {
 	}
 
 	INIT_LIST_HEAD(&h->next);
-	h->elapse = 1000;
-	h->type = JOB_TYPE_HELLO;
+	h->elapse     = 1000;
+	h->type       = JOB_TYPE_HELLO;
 	h->reschedule = -1;
 
 	/* Add the Hello message. */
@@ -76,7 +77,7 @@ int net_connected(struct net_context * net) {
 	return 0;
 }
 
-int net_next_seq(struct net_context * net) {
+unsigned int net_next_seq(struct net_context * net) {
 	int ret = 0;
 
 /****** LOCK ******************************************************************/
@@ -228,7 +229,8 @@ int net_sched_job(
 	int type,
 	int interval,
 	int res,
-	void * args) {
+	void * args,
+	unsigned int size) {
 
 	struct sched_job * job = malloc(sizeof(struct sched_job));
 
@@ -239,11 +241,23 @@ int net_sched_job(
 
 	memset(job, 0, sizeof(struct sched_job));
 
+	if(args) {
+		job->args = malloc(sizeof(char) * size);
+
+		if(!job->args) {
+			free(job);
+			EMLOG("Not enough memory!");
+			return -1;
+		}
+
+		memcpy(job->args, args, sizeof(char) * size);
+	}
+
 	INIT_LIST_HEAD(&job->next);
-	job->type = type;
-	job->args = args;
-	job->id = id;
-	job->elapse = interval;
+	job->type       = type;
+	job->size       = size;
+	job->id         = id;
+	job->elapse     = interval;
 	job->reschedule = res;
 
 	sched_add_job(job, &a->sched);
@@ -255,6 +269,16 @@ int net_sched_job(
  * Message specific procedures.                                               *
  ******************************************************************************/
 
+int net_se_enb_setup(struct net_context * net, char * msg, int size) {
+	uint32_t       seq;
+	struct agent * a = container_of(net, struct agent, net);
+
+	seq = epp_seq(msg, size);
+
+	return net_sched_job(a, seq, JOB_TYPE_ENB_SETUP, 1, 0, msg, size);
+}
+
+#if 0
 int net_se_ctrl_cmd(struct net_context * net, EmageMsg * msg) {
 	struct agent * a = container_of(net, struct agent, net);
 
@@ -498,52 +522,91 @@ int net_te_cell_stats(struct net_context * net, EmageMsg * msg) {
 
 	return 0;
 }
+#endif
 
 /******************************************************************************
  * Top-level message handlers.                                                *
  ******************************************************************************/
 
-int net_process_sched_event(struct net_context * net, EmageMsg * msg) {
-	ScheduleEvent * ce = msg->sche;
+int net_process_sched_event(
+	struct net_context * net, char * msg, unsigned int size)
+{
+	ep_sch_type s = epp_schedule_type(msg, size);
 
-	switch(ce->events_case) {
+	if(s == EP_SCH_INVALID_MSG) {
+		EMDBG("Malformed schedule-event message received!\n");
+		return -1;
+	}
+
+	switch(s) {
+	case EP_SCH_HELLO_MSG:
+		/* Don't really care about the hello reply now */
+		break;
+#if 0
 	case SCHEDULE_EVENT__EVENTS_M_ENB_CELLS:
 		return net_sc_enb_cells(net, msg);
+#endif
 	default:
-		EMDBG("Unknown scheduled event, type=%d", ce->events_case);
+		EMDBG("Unknown scheduled event, type=%d", s);
 		break;
 	}
 
 	return 0;
 }
 
-int net_process_single_event(struct net_context * net, EmageMsg * msg) {
-	SingleEvent * se = msg->se;
+int net_process_single_event(
+	struct net_context * net, char * msg, unsigned int size)
+{
+	ep_sin_type s = epp_single_type(msg, size);
 
-	switch(se->events_case) {
+	if(s == EP_SIN_INVALID_MSG) {
+		EMDBG("Malformed single-event message received!\n");
+		return -1;
+	}
+
+	switch(s) {
+	case EP_SIN_HELLO_MSG:
+		if(epp_single_dir(msg, size) == EP_DIR_REPLY) {
+			EMDBG("Hello reply received!");
+		}
+		break;
+	case EP_SIN_ECAP_MSG:
+		if(epp_single_dir(msg, size) == EP_DIR_REQUEST) {
+			EMDBG("eNB capabilities request received!");
+			return net_se_enb_setup(net, msg, size);
+		}
+		break;
+#if 0
 	case SINGLE_EVENT__EVENTS_M_CTRL_CMDS:
 		return net_se_ctrl_cmd(net, msg);
 	case SINGLE_EVENT__EVENTS_M_ENB_CELLS:
 		return net_se_enb_cells(net, msg);
 	case SINGLE_EVENT__EVENTS_M_RAN_SHARING_CTRL:
 		return net_se_ran_sh(net, msg);
+#endif
 	default:
-		EMDBG("Unknown single event, type=%d", se->events_case);
+		EMDBG("Unknown single event, type=%d", s);
 		break;
 	}
 
 	return 0;
 }
 
-int net_process_trigger_event(struct net_context * net, EmageMsg * msg) {
-	TriggerEvent * te = msg->te;
+int net_process_trigger_event(
+	struct net_context * net, char * msg, unsigned int size)
+{
+	ep_tr_type t = epp_trigger_type(msg, size);
 
-	if(!te) {
-		EMDBG("Malformed trigger event message!\n");
+	if(t == EP_TR_INVALID_MSG) {
+		EMDBG("Malformed trigger-event message received!\n");
 		return -1;
 	}
 
-	switch(te->events_case) {
+	switch(t) {
+	case EP_TR_HELLO_MSG:
+		/* Don't really care about the hello reply now */
+		break;
+#if 0
 	case TRIGGER_EVENT__EVENTS_M_UES_ID:
 		return net_te_usid(net, msg);
 	case TRIGGER_EVENT__EVENTS_M_RRC_MEAS:
@@ -552,8 +615,9 @@ int net_process_trigger_event(struct net_context * net, EmageMsg * msg) {
 		return net_te_rrc_mcon(net, msg);
 	case TRIGGER_EVENT__EVENTS_M_CELL_STATS:
 		return net_te_cell_stats(net, msg);
+#endif
 	default:
-		EMDBG("Unknown trigger event, type=%d", te->events_case);
+		EMDBG("Unknown trigger event, type=%d", t);
 		break;
 	}
 
@@ -561,19 +625,22 @@ int net_process_trigger_event(struct net_context * net, EmageMsg * msg) {
 }
 
 /* Process incoming messages. */
-int net_process_message(struct net_context * net, EmageMsg * msg) {
-	switch(msg->event_types_case) {
+int net_process_message(struct net_context * net, char * msg, unsigned int size)
+{
+	ep_msg_type mt = epp_msg_type(msg, size);
+
+	switch(mt) {
 	/* Single events messages. */
-	case EMAGE_MSG__EVENT_TYPES_SE:
-		return net_process_single_event(net, msg);
+	case EP_TYPE_SINGLE_MSG:
+		return net_process_single_event(net, msg, size);
 	/* Scheduled events messages. */
-	case EMAGE_MSG__EVENT_TYPES_SCHE:
-		return net_process_sched_event(net, msg);
+	case EP_TYPE_SCHEDULE_MSG:
+		return net_process_sched_event(net, msg, size);
 	/* Triggered events messages. */
-	case EMAGE_MSG__EVENT_TYPES_TE:
-		return net_process_trigger_event(net, msg);
+	case EP_TYPE_TRIGGER_MSG:
+		return net_process_trigger_event(net, msg, size);
 	default:
-		EMDBG("Unknown message received!");
+		EMDBG("Unknown message received, size=%d", size);
 		break;
 	}
 
@@ -584,14 +651,15 @@ int net_process_message(struct net_context * net, EmageMsg * msg) {
  * Network listener logic.                                                    *
  ******************************************************************************/
 
-void * net_loop(void * args) {
+void * net_loop(void * args)
+{
 	struct net_context * net = (struct net_context *)args;
 
-	int bread = 0;
-	int mlen = 0;
+	int op;
+	int bread;
+	int mlen  = 0;
 
 	char buf[EM_BUF_SIZE] = {0};
-	EmageMsg * msg = 0;
 
 	unsigned int wi = net->interval;
 	struct timespec wt = {0};	/* Wait time. */
@@ -605,56 +673,68 @@ void * net_loop(void * args) {
 	wt.tv_nsec = wi * 1000000;
 
 	while(!net->stop) {
+next:
 		if(net->status == EM_STATUS_NOT_CONNECTED) {
 			if(net_connect_to_controller(net) == 0) {
 				net_connected(net);
 			}
+
+			/* Relax the CPU. */
+			usleep(NET_RECONNECT_TIME);
+			continue;
 		}
 
-		bread = net_recv(net, buf, 4);
+		bread = 0;
 
-		/* Something has been received.
-		 * NOTE: Message must be at least 4 bytes long.
-		 */
-		if(bread == 4) {
-			memcpy(&mlen, buf, 4);
-			mlen = ntohl(mlen);
+		/* Continue until EP_PROLOGUE_SIZE bytes have been collected */
+		while(bread < EP_PROLOGUE_SIZE) {
+			op = net_recv(
+				net, buf + bread, EP_PROLOGUE_SIZE - bread);
 
-			bread = net_recv(net, buf, mlen);
+			if(op <= 0) {
+				if(errno == EAGAIN) {
+					/* Relax the CPU. */
+					usleep(NET_WAIT_TIME);
+					continue;
+				}
 
-			if (bread != mlen) {
-				EMLOG("Malformed message received, "
-					"msg=%d, recv=%d", mlen, bread);
-
-				/* Ok, this is serious, since we can loose the
-				 * alignment of the 4 firsts bytes which
-				 * contains the message size.
-				 *
-				 * Cloasing the socket here cause the Hello to
-				 * fail on sending, and this triggers the right
-				 * NOT_CONNECTED condition(cleanup of the
-				 * scheduler).
-				 */
-				close(net->sockfd);
-
-				goto sleep;
+				net_not_connected(net);
+				goto next;
 			}
 
-			msg = emage_msg__unpack(0, mlen, buf);
-
-			if(msg) {
-				net_process_message(net, msg);
-			} else {
-				EMLOG("Failed to decode the message!");
-			}
+			bread += op;
 		}
 
-sleep:
-		/* Relax the CPU. */
-		nanosleep(&wt, &td);
+		memcpy(&mlen, buf, bread);
+		mlen = ntohl(mlen);
+
+		EMDBG("Receiving a message of size %d", mlen);
+
+		bread = 0;
+
+		/* Continue until the entire message has been collected */
+		while(bread < mlen) {
+			op = net_recv(net, buf + bread, mlen - bread);
+
+			if(op <= 0) {
+				if(errno == EAGAIN) {
+					/* Relax the CPU. */
+					usleep(NET_WAIT_TIME);
+					continue;
+				}
+
+				net_not_connected(net);
+				goto next;
+			}
+
+			bread += op;
+		}
+
+		/* Finally we collected the entire message; process it! */
+		net_process_message(net, buf, bread);
 	}
 
-	EMDBG("Listening loop is terminating...\n");
+	EMDBG("Listening loop is terminating...");
 
 	/*
 	 * If you need to release 'net' specific resources, do it here!
@@ -663,7 +743,8 @@ sleep:
 	return 0;
 }
 
-int net_start(struct net_context * net) {
+int net_start(struct net_context * net)
+{
 	/* 1 second interval by default. */
 	net->interval = 100;
 
@@ -680,7 +761,8 @@ int net_start(struct net_context * net) {
 	return 0;
 }
 
-int net_stop(struct net_context * net) {
+int net_stop(struct net_context * net)
+{
 	/* Stop and wait for it... */
 	net->stop = 1;
 	pthread_join(net->thread, 0);

@@ -1,4 +1,4 @@
-/* Copyright (c) 2016 Kewin Rausch
+/* Copyright (c) 2017 Kewin Rausch
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,26 +13,27 @@
  * limitations under the License.
  */
 
-/*
- *  Empower Agent messages handling procedures.
+/*    HELLO MESSAGE
+ *
+ * Such message is a presentation done by the agent to the controller.
+ * Usually its used to check the connection between agent and controller.
  */
 
-#ifndef __EMAGE_LOG_H
-#define __EMAGE_LOG_H
+#ifndef __EMAGE_PROTOCOLS_HELLO_H
+#define __EMAGE_PROTOCOLS_HELLO_H
 
-#include <stdio.h>
+#include <stdint.h>
 
-/* Log routine for every feedback. */
-#define EMLOG(x, ...)                                                   \
-	printf("emage: "x"\n", ##__VA_ARGS__)
+/*
+ * Hello message
+ */
 
-#ifdef EM_DEBUG
-/* Debugging routine. */
-#define EMDBG(x, ...)                                                   \
-	printf("emage-debug:"x"\n", ##__VA_ARGS__)
-#else
-/* Debugging routine. */
-#define EMDBG(x, ...)
-#endif
+typedef struct __ep_hello_reply {
+	uint32_t id;
+}__attribute__((packed)) ep_hello_rep;
 
-#endif
+typedef struct __ep_hello_request {
+	uint32_t id;
+}__attribute__((packed)) ep_hello_req;
+
+#endif /* __EMAGE_PROTOCOLS_HELLO_H */

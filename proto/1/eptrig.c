@@ -15,6 +15,20 @@
 
 #include <emproto.h>
 
+int epf_trigger(
+	char * buf, unsigned int size,
+	ep_sin_type type,
+	ep_op_type  op,
+	ep_dir_type dir)
+{
+	ep_t_hdr * h = (ep_t_hdr *)(buf);
+
+	h->type = (uint8_t)type;
+	h->op   = (uint8_t)op;
+	h->dir  = (uint8_t)dir;
+
+	return sizeof(ep_t_hdr);
+}
 /******************************************************************************
  * Public API                                                                 *
  ******************************************************************************/
@@ -24,6 +38,17 @@ ep_dir_type epp_trigger_dir(char * buf, unsigned int size)
 	ep_t_hdr * h = (ep_t_hdr *)(buf + sizeof(ep_hdr));
 
 	return (ep_dir_type)h->dir;
+}
+
+ep_op_type epp_trigger_op(char * buf, unsigned int size)
+{
+	ep_t_hdr * h = (ep_t_hdr *)(buf + sizeof(ep_hdr));
+
+	if(size < sizeof(ep_hdr) + sizeof(ep_t_hdr)) {
+		return EP_TYPE_INVALID_MSG;
+	}
+
+	return (ep_tr_type)h->op;
 }
 
 ep_tr_type epp_trigger_type(char * buf, unsigned int size)

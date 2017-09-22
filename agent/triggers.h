@@ -43,6 +43,9 @@ struct tr_context {
 	/* List of triggers. */
 	struct list_head ts;
 
+	/* Id for the next trigger*/
+	int next;
+
 	/* Lock for this context. */
 	pthread_spinlock_t lock;
 };
@@ -58,11 +61,23 @@ struct trigger * tr_add(
 	char * req,
 	unsigned char size);
 
+/* Find, remove and free a trigger */
+int tr_del(struct tr_context * tc, int id, int type);
+
+/* Find an existing trigger */
+struct trigger * tr_find(struct tr_context * tc, int id, int type);
+
 /* Flush everything and clean the context. */
 int tr_flush(struct tr_context * tc);
 
+/* Free the resources of a trigger */
+void tr_free(struct trigger * tc);
+
 /* Peek the context to see if it has a specific trigger. */
 struct trigger * tr_has_trigger(struct tr_context * tc, int id, int type);
+
+/* Acquires the next usable trigger id */
+int tr_next_id(struct tr_context * tc);
 
 /* Removes a trigger from the agent triggering context. */
 int tr_rem(struct tr_context * tc, int id, int type);

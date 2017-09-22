@@ -61,4 +61,14 @@ int epp_head(
 	uint16_t * cell_id,
 	uint32_t * mod_id);
 
+/* Extracts the type from an Empower message */
+ep_msg_type epp_msg_type(char * buf, unsigned int size);
+
+/* Extracts the sequence number from the message */
+uint32_t    epp_seq(char * buf, unsigned int size);
+
+/* Inject a sequence number in the header. */
+int         epf_seq(char * buf, unsigned int size, uint32_t seq);
+
+
 #endif /* __EMAGE_PROTOCOLS_HEADER_H */

@@ -21,17 +21,19 @@
 #define __EMAGE_H
 
 /* Possible triggers which can be installed in the agent. */
-enum EM_TRIGGER_TYPE {
-	EM_NONE_TRIGGER = 0,
-	/* UE state transaction. */
-	EM_UEs_ID_REPORT_TRIGGER,
+typedef enum em_trigger_type {
+	EM_TRIGGER_NONE = 0,
+	/* UE report trigger. */
+	EM_TRIGGER_UE_REPORT,
+#if 0
 	/* RRC measurements trigger. */
 	EM_RRC_MEAS_TRIGGER,
 	/* RRC measurements configuration trigger. */
 	EM_RRC_MEAS_CONF_TRIGGER,
 	/* Cell statistics trigger. */
 	EM_CELL_STATS_TRIGGER,
-};
+#endif
+} EM_TRIGGER_TYPE;
 
 /* Defines the operations that can be customized depending on the technology
  * where you want to embed the agent to. Such procedures will be called by the
@@ -75,6 +77,21 @@ struct em_agent_ops {
 	 * Returns 0 on success, a negative error code otherwise.
 	 */
 	int (* cell_setup_request) (int cell_id);
+
+	/*
+	 * Capabilities-related procedures:
+	 */
+
+	/* Informs the stack that a log for UE activity has been required by the
+	 * controller. The wrapper shall perform operations to enable such
+	 * functionality into the base station.
+	 *
+	 * Mod. represent the module which requested for such report.
+	 * The id given has to be used to check for its existence later.
+	 *
+	 * Returns 0 on success, a negative error code otherwise.
+	 */
+	int (* ue_report) (unsigned int mod, int trig_id, int trig_type);
 
 #if 0
 	/*

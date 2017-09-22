@@ -15,54 +15,48 @@
 
 #include <emproto.h>
 
-int epf_ecap_rep(
-	char * buf, unsigned int size,
-	uint32_t cap,
-	uint16_t * cell_ids,
-	uint32_t nof_cells)
+int epf_ccap_rep(
+	char *        buf, unsigned int size,
+	uint32_t      cap,
+	ep_cell_det * cell)
 {
-	int           i   = 0;
-	ep_ecap_rep * rep = (ep_ecap_rep *)buf;
+	ep_ccap_rep * rep = (ep_ccap_rep *)buf;
 
-	rep->cap       = htonl(cap);
-	rep->nof_cells = htonl(nof_cells);
+	rep->cap        = htonl(cap);
+	rep->DL_earfcn  = htons(cell->DL_earfcn);
+	rep->DL_prbs    = cell->DL_prbs;
+	rep->UL_earfcn  = htons(cell->UL_earfcn);
+	rep->UL_prbs    = cell->UL_prbs;
 
-	for(i = 0; i < nof_cells && i < EP_ENCAP_MAX_CELLS; i++) {
-		rep->cell_ids[i] = htons(cell_ids[i]);
-	}
-
-	return sizeof(ep_ecap_rep);
+	return sizeof(ep_ccap_rep);
 }
 
-int epp_ecap_rep(
-	char * buf, unsigned int size,
-	uint32_t * cap,
-	uint16_t * cell_ids,
-	uint32_t * nof_cells)
+int epp_ccap_rep(
+	char *        buf, unsigned int size,
+	uint32_t *    cap,
+	ep_cell_det * cell)
 {
-	int           i   = 0;
-	ep_ecap_rep * rep = (ep_ecap_rep *)buf;
+	ep_ccap_rep * rep = (ep_ccap_rep *)buf;
 
-	*cap       = ntohl(rep->cap);
-	*nof_cells = ntohl(rep->nof_cells);
-
-	for(i = 0; i < *nof_cells && i < EP_ENCAP_MAX_CELLS; i++) {
-		cell_ids[i] = ntohs(rep->cell_ids[i]);
-	}
+	*cap             = ntohl(rep->cap);
+	cell->DL_earfcn  = ntohs(rep->DL_earfcn);
+	cell->DL_prbs    = rep->DL_prbs;
+	cell->UL_earfcn  = ntohs(rep->UL_earfcn);
+	cell->UL_prbs    = rep->UL_prbs;
 
 	return EP_SUCCESS;
 }
 
-int epf_ecap_req(char * buf, unsigned int size)
+int epf_ccap_req(char * buf, unsigned int size)
 {
-	ep_ecap_req * rep = (ep_ecap_req *)buf;
+	ep_ccap_req * rep = (ep_ccap_req *)buf;
 
 	rep->dummy = 0;
 
-	return sizeof(ep_ecap_req);
+	return sizeof(ep_ccap_req);
 }
 
-int epp_ecap_req(char * buf, unsigned int size)
+int epp_ccap_req(char * buf, unsigned int size)
 {
 	return EP_SUCCESS;
 }
@@ -71,14 +65,13 @@ int epp_ecap_req(char * buf, unsigned int size)
  * Public API                                                                 *
  ******************************************************************************/
 
-int epf_single_ecap_rep(
-	char *     buf, unsigned int size,
-	uint32_t   enb_id,
-	uint16_t   cell_id,
-	uint32_t   mod_id,
-	uint32_t   cap_mask,
-	uint16_t * cell_ids,
-	uint32_t   nof_cells)
+int epf_single_ccap_rep(
+	char *        buf, unsigned int size,
+	uint32_t      enb_id,
+	uint16_t      cell_id,
+	uint32_t      mod_id,
+	uint32_t      cap_mask,
+	ep_cell_det * cell)
 {
 	int ms = 0;
 
@@ -93,30 +86,28 @@ int epf_single_ecap_rep(
 	ms += epf_single(
 		buf + ms,
 		size - ms,
-		EP_SIN_ECAP_MSG,
+		EP_SIN_CCAP_MSG,
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REPLY);
 
-	ms += epf_ecap_rep(buf + ms, size - ms, cap_mask, cell_ids, nof_cells);
+	ms += epf_ccap_rep(buf + ms, size - ms, cap_mask, cell);
 
 	return ms;
 }
 
-int epp_single_ecap_rep(
-	char * buf, unsigned int size,
-	uint32_t * cap_mask,
-	uint16_t * cell_ids,
-	uint32_t * nof_cells)
+int epp_single_ccap_rep(
+	char *        buf, unsigned int size,
+	uint32_t *    cap_mask,
+	ep_cell_det * cell)
 {
-	return epp_ecap_rep(
+	return epp_ccap_rep(
 		buf + sizeof(ep_hdr) + sizeof(ep_s_hdr),
 		size,
 		cap_mask,
-		cell_ids,
-		nof_cells);
+		cell);
 }
 
-int epf_single_ecap_req(
+int epf_single_ccap_req(
 	char * buf, unsigned int size,
 	uint32_t enb_id,
 	uint16_t cell_id,
@@ -135,7 +126,7 @@ int epf_single_ecap_req(
 	ms += epf_single(
 		buf + ms,
 		size - ms,
-		EP_SIN_ECAP_MSG,
+		EP_SIN_CCAP_MSG,
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REQUEST);
 
@@ -144,7 +135,7 @@ int epf_single_ecap_req(
 	return ms;
 }
 
-int epp_single_ecap_req(char * buf, unsigned int size)
+int epp_single_ccap_req(char * buf, unsigned int size)
 {
 	return epp_ecap_req(
 		buf + sizeof(ep_hdr) + sizeof(ep_s_hdr),

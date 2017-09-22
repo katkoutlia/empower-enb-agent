@@ -18,6 +18,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <pthread.h>
 
@@ -31,8 +32,8 @@ struct trigger * tr_add(
 	int id,
 	int type,
 	char * req,
-	unsigned char size) {
-
+	unsigned char size)
+{
 	struct trigger * t = tr_has_trigger(tc, id, type);
 
 	if(t) {
@@ -47,28 +48,80 @@ struct trigger * tr_add(
 		return 0;
 	}
 
+	memset(t, 0, sizeof(struct trigger));
+
+	if(req) {
+		t->req = malloc(sizeof(char) * size);
+
+		if(!t->req) {
+			printf("Not enough memory for new trigger!\n");
+			free(t);
+			return 0;
+		}
+
+		memcpy(t->req, req, size);
+		t->size = size;
+	}
+
 	INIT_LIST_HEAD(&t->next);
 	t->id   = id;
 	t->type = type;
-	t->req  = req;
-	t->size = size;
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&tc->lock);
 	list_add(&t->next, &tc->ts);
 	pthread_spin_unlock(&tc->lock);
-/****** UNLOCK ****************************************************************/
 
 	EMDBG("New trigger enabled, id=%d, type=%d", id, type);
 
 	return t;
 }
 
-struct trigger * tr_has_trigger(struct tr_context * tc, int id, int type) {
+int tr_del(struct tr_context * tc, int id, int type)
+{
+	struct trigger * t = 0;
+	struct trigger * u = 0;
+	int found = 0;
+
+	pthread_spin_lock(&tc->lock);
+	list_for_each_entry_safe(t, u, &tc->ts, next) {
+		if(t->type == type && t->id == id) {
+			list_del(&t->next);
+			pthread_spin_unlock(&tc->lock);
+
+			tr_free(t);
+			return 0;
+		}
+	}
+	pthread_spin_unlock(&tc->lock);
+
+	return -1;
+}
+
+struct trigger * tr_find(
+	struct tr_context * tc,
+	int id,
+	int type)
+{
 	struct trigger * t = 0;
 	int found = 0;
 
-/****** LOCK ******************************************************************/
+	pthread_spin_lock(&tc->lock);
+	list_for_each_entry(t, &tc->ts, next) {
+		if(t->type == type && t->id == id) {
+			pthread_spin_unlock(&tc->lock);
+			return t;
+		}
+	}
+	pthread_spin_unlock(&tc->lock);
+
+	return 0;
+}
+
+struct trigger * tr_has_trigger(struct tr_context * tc, int id, int type)
+{
+	struct trigger * t = 0;
+	int found = 0;
+
 	pthread_spin_lock(&tc->lock);
 	list_for_each_entry(t, &tc->ts, next) {
 		if(t->type == type && t->id == id) {
@@ -77,7 +130,6 @@ struct trigger * tr_has_trigger(struct tr_context * tc, int id, int type) {
 		}
 	}
 	pthread_spin_unlock(&tc->lock);
-/****** UNLOCK ****************************************************************/
 
 	if(!found) {
 		return 0;
@@ -86,45 +138,60 @@ struct trigger * tr_has_trigger(struct tr_context * tc, int id, int type) {
 	return t;
 }
 
-int tr_flush(struct tr_context * tc) {
+int tr_flush(struct tr_context * tc)
+{
 	struct trigger * t = 0;
 	struct trigger * u = 0;
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&tc->lock);
 	list_for_each_entry_safe(t, u, &tc->ts, next) {
 		EMDBG("Flushing out trigger %d", t->id);
 
 		list_del(&t->next);
-		free(t);
+		tr_free(t);
 	}
 	pthread_spin_unlock(&tc->lock);
-/****** UNLOCK ****************************************************************/
 
 	return 0;
 }
 
-int tr_rem(struct tr_context * tc, int id, int type) {
+void tr_free(struct trigger * t)
+{
+	if(t) {
+		if(t->req) {
+			free(t->req);
+		}
+
+		free(t);
+	}
+}
+
+int tr_next_id(struct tr_context * tc)
+{
+	int n;
+
+	pthread_spin_lock(&tc->lock);
+	n = tc->next++;
+	pthread_spin_unlock(&tc->lock);
+
+	return n;
+}
+
+int tr_rem(struct tr_context * tc, int id, int type)
+{
 	struct trigger * t = 0;
 	struct trigger * u = 0;
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&tc->lock);
 	list_for_each_entry_safe(t, u, &tc->ts, next) {
 		if(t->id == id && t->type == type) {
 			EMDBG("Removing trigger %d", t->id);
 
 			list_del(&t->next);
-
-			if(t->req) {
-				free(t->req);
-			}
-
-			free(t);
+			break;
 		}
 	}
 	pthread_spin_unlock(&tc->lock);
-/****** UNLOCK ****************************************************************/
 
 	return 0;
 }

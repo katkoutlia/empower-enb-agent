@@ -46,5 +46,8 @@
 
 #include "ephello.h"
 #include "epenbcap.h"
+#include "epcelcap.h"
+#include "epuerep.h"
+#include "epuemeas.h"
 
 #endif /* __EMAGE_PROTOCOLS_v1_H */

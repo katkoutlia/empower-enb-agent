@@ -342,6 +342,7 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 	a->net.port = em_conf.ctrl_port;
 	a->ops = ops;
 
+	a->trig.next = 1;
 	pthread_spin_init(&a->trig.lock, 0);
 	INIT_LIST_HEAD(&a->trig.ts);
 

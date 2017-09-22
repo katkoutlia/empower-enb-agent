@@ -25,15 +25,18 @@
 
 #include <stdint.h>
 
+#include "epop.h"
+
 /*
  * Possible types of single messages that can occurs
  */
 
 typedef enum __ep_single_type {
 	EP_SIN_INVALID_MSG = 0,
-	EP_SIN_HELLO_MSG,
-	EP_SIN_ECAP_MSG,
-	EP_SIN_EXTENDED = 0xff
+	EP_SIN_HELLO_MSG,       /* Hello */
+	EP_SIN_ECAP_MSG,        /* eNB capabilities */
+	EP_SIN_CCAP_MSG,        /* Cell capabilities */
+	EP_SIN_EXTENDED = 0xff  /* Reserved */
 } ep_sin_type;
 
 /*
@@ -43,10 +46,20 @@ typedef enum __ep_single_type {
 typedef struct __ep_single_header {
 	uint8_t type;
 	uint8_t dir;   /* Direction of the message, see epdir.h */
+	uint8_t op;    /* Operation type, see epop.h */
 }__attribute__((packed)) ep_s_hdr;
 
 /* Format a single-event message */
 int epf_single(
-	char * buf, unsigned int size, ep_sin_type type, ep_dir_type dir);
+	char * buf, unsigned int size,
+	ep_sin_type type,
+	ep_op_type  op,
+	ep_dir_type dir);
+
+/* Extracts the direction on an Empower single message */
+ep_dir_type epp_single_dir(char * buf, unsigned int size);
+
+/* Extracts the type from an Empower single message */
+ep_sin_type epp_single_type(char * buf, unsigned int size);
 
 #endif /* __EMAGE_PROTOCOLS_SINGLE_H */

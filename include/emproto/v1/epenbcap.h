@@ -29,8 +29,10 @@
 typedef enum __ep_enb_capabilities_types {
 	/* Can't do anything except present himself */
 	EP_ECAP_NOTHING = 0,
-	/* Can report connected UEs. */
-	EP_ECAP_UE_REPORT = 1,
+	/* Can report connected UEs */
+	EP_ECAP_UE_REPORT,
+	/* Can report connected UEs signal power */
+	EP_ECAP_UE_MEASURE,
 } ep_ecap_type;
 
 /*
@@ -44,7 +46,7 @@ typedef struct __ep_enb_capabilities_reply {
 }__attribute__((packed)) ep_ecap_rep;
 
 typedef struct __ep_enb_capabilities_request {
-	uint32_t dummy;
+	uint8_t dummy;
 }__attribute__((packed)) ep_ecap_req;
 
 /******************************************************************************
@@ -63,7 +65,7 @@ int epf_single_ecap_rep(
 	uint16_t * cell_ids,
 	uint32_t   nof_cells);
 
-/* Parse an eNB capabilities reply for the desired fields. */
+/* Parse an eNB capabilities reply looking for the desired fields */
 int epp_single_ecap_rep(
 	char * buf, unsigned int size,
 	uint32_t * cap_mask,
@@ -79,17 +81,7 @@ int epf_single_ecap_req(
 	uint16_t cell_id,
 	uint32_t mod_id);
 
-/* Parse an eNB capabilities request for the desired fields. */
+/* Parse an eNB capabilities request for the desired fields */
 int epp_single_ecap_req(char * buf, unsigned int size);
-
-/* Format an Hello reply message with the desired fields.
- * Returns the size of the message, or a negative error number.
- */
-int epf_single_hello_rep(
-	char * buf, unsigned int size,
-	uint32_t enb_id,
-	uint16_t cell_id,
-	uint32_t mod_id,
-	uint32_t id);
 
 #endif /* __EMAGE_ENB_CAPABILITIES_H */

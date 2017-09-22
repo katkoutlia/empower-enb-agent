@@ -17,6 +17,7 @@
  * Empower Agent internal scheduler logic.
  */
 
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -90,10 +91,42 @@ int sched_perform_send(struct agent * a, struct sched_job * job)
 	return sched_send_msg(a, job->args, job->size);
 }
 
+int sched_perform_cell_setup(struct agent * a, struct sched_job * job)
+{
+	uint16_t cell_id = 0;
+
+	/* Extracts only the cell id field */
+	epp_head((char *)job->args, job->size, 0, 0, &cell_id, 0);
+
+	if(a->ops && a->ops->cell_setup_request) {
+		a->ops->cell_setup_request(cell_id);
+	}
+
+	return JOB_CONSUMED;
+}
+
 int sched_perform_enb_setup(struct agent * a, struct sched_job * job)
 {
 	if(a->ops && a->ops->enb_setup_request) {
 		a->ops->enb_setup_request();
+	}
+
+	return JOB_CONSUMED;
+}
+
+int sched_perform_ue_report(struct agent * a, struct sched_job * job)
+{
+	uint32_t         mod = 0;
+	struct trigger * t   = 0;
+
+	if(a->ops && a->ops->ue_report) {
+		epp_head((char *)job->args, job->size, 0, 0, 0, &mod);
+
+		t = tr_has_trigger(&a->trig, mod, EM_TRIGGER_UE_REPORT);
+
+		if(t) {
+			a->ops->ue_report(mod, t->id, t->type);
+		}
 	}
 
 	return JOB_CONSUMED;
@@ -300,6 +333,8 @@ int sched_perform_job(
 		return JOB_NOT_ELAPSED;
 	}
 
+	EMDBG(" **************** Performing a job %d", job->type);
+
 	switch(job->type) {
 	case JOB_TYPE_SEND:
 		status = sched_perform_send(a, job);
@@ -309,6 +344,12 @@ int sched_perform_job(
 		break;
 	case JOB_TYPE_ENB_SETUP:
 		status = sched_perform_enb_setup(a, job);
+		break;
+	case JOB_TYPE_CELL_SETUP:
+		status = sched_perform_cell_setup(a, job);
+		break;
+	case JOB_TYPE_UE_REPORT:
+		status = sched_perform_ue_report(a, job);
 		break;
 #if 0
 	case JOB_TYPE_UEs_LOG_TRIGGER:

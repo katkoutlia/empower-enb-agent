@@ -4,18 +4,21 @@
 
 
 The agent protocols are built around 3 major classification of the events that
-can occurs in the system, which are:
+can occurs in the agent system, which are:
   
-  - Single: This are synchronous events, requested by the controller and 
+  - SINGLE-event 
+    This are synchronous events, requested by the controller and 
     notified back immediately by the agents. This match the behavior of a 
     request&reply message.
     
-  - Scheduled: This are asynchronous events scheduled to be fired in the agents.
+  - SCHEDULE-event
+    This are asynchronous events scheduled to be fired in the agents.
     This allows to schedule in the future a certain event, or give to it a 
     certain interval after that is always invoked(until the controller decide to
     remove it).
     
-  - Triggered: This are a mix of the previous two, since the trigger can be 
+  - TRIGGER-event
+    This are a mix of the previous two, since the trigger can be 
     invoked at uncertain times. When a condition in the system happens, the 
     agent must react and communicate such event to the controller. 
     These are part of an on/off mechanism: when the trigger is activated you 
@@ -23,12 +26,61 @@ can occurs in the system, which are:
     react to the event (base-station implementation specific). If such event 
     happens but you don't find the trigger in the agent, this means that it has
     been remove and you can disable the trigger notification.
+
+
+Such message types contains specialized header which describes the property of
+the event to the agent subsystem. If properly extended, any message can fall in
+any of these three categories, since they have their own description.
+
+The following schema resumes the organization of a generic message sent/received
+using the EmPOWER protocols:
+
+        +---------+----------+----------+----------------+
+        |         |          |          |                |
+        |    H    |    EH    |   Body   |      Data      |
+        |         |          |          |                |
+        +---------+----------+----------+----------------+
     
-All the messages can be one of this three main family, but usually some messages
-does not fix a particular family: for example the Hello message is just of type 
-"single", since it does not makes sense to have it Triggered or Scheduled.
-The agent will automatically schedule an hello every time it connects to the 
-controller, and will transmit a message as if the controller requested an Hello
-to the base station.
+      H: Header
+    This is the master header, and resume the information which are necessary
+    for every message to take place. Any information stored here is always 
+    present, in any message exchanged.
+    
+      EH: Event header
+    This header can be any of the types previously discussed, and can be 
+    distinguished by using the field 'type' in the master header. Some fields
+    can be found in multiple type of events, but at the end of the day any event
+    header is independent from the others.
+    
+      BODY
+    The following section contains the body of the message, and depends on the 
+    'type' field of the Event Header. Potentially any message has now its own
+    format that can or cannot be equals to the one of the others. I would like 
+    to notice that body data does not have any reference to the Event Header 
+    type, and this means that such messages can potentially be exchanged with 
+    any type of Event Header.
+    
+      DATA
+    Some type of messages requires a variable amount of data to be sent, and 
+    such data is appended at the end of the message. Fields in the body allows
+    to determine how many of such data is valid.
+    
+Let's see some quick example of such organization:
+
+    Dtmp of Single-event Hello reply:
+    01 01 00 00 00 01 00 00 00 00 00 00 00 00 00 0e 01 01 00 00 00 00
+    
+    Master Header:
+        01          - Event type: Single
+        01          - Protocol version 1
+        00 00 00 01 - eNB id
+        00 00       - Cell id
+        00 00 00 00 - Module id
+        00 00 00 0e - Sequence number
+        
+    Event header:
+        01          - Hello message
+        01          - Direction: Reply
+        00          - Operation type: Unspecified
 
 Kewin R.

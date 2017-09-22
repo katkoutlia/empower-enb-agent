@@ -50,8 +50,20 @@ int epf_single_hello_req(
 {
 	int ms = 0;
 
-	ms += epf_head(buf, size, EP_TYPE_SINGLE_MSG, enb_id, cell_id, mod_id);
-	ms += epf_single(buf + ms, size - ms, EP_SIN_HELLO_MSG, EP_DIR_REQUEST);
+	ms += epf_head(
+		buf, size,
+		EP_TYPE_SINGLE_MSG,
+		enb_id,
+		cell_id,
+		mod_id);
+
+	ms += epf_single(
+		buf + ms,
+		size - ms,
+		EP_SIN_HELLO_MSG,
+		EP_OPERATION_UNSPECIFIED,
+		EP_DIR_REQUEST);
+
 	ms += epf_hello_req(buf + ms, size - ms, id);
 
 	return ms;
@@ -66,8 +78,20 @@ int epf_single_hello_rep(
 {
 	int ms = 0;
 
-	ms += epf_head(buf, size, EP_TYPE_SINGLE_MSG, enb_id, cell_id, mod_id);
-	ms += epf_single(buf + ms, size - ms, EP_SIN_HELLO_MSG, EP_DIR_REPLY);
+	ms += epf_head(
+		buf, size,
+		EP_TYPE_SINGLE_MSG,
+		enb_id,
+		cell_id,
+		mod_id);
+
+	ms += epf_single(
+		buf + ms,
+		size - ms,
+		EP_SIN_HELLO_MSG,
+		EP_OPERATION_UNSPECIFIED,
+		EP_DIR_REPLY);
+
 	ms += epf_hello_rep(buf + ms, size - ms, id);
 
 	return ms;

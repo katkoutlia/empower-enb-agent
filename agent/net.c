@@ -18,6 +18,7 @@
  */
 
 #include <errno.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -123,8 +124,10 @@ int net_nodelay_socket(int sockfd) {
 int net_not_connected(struct net_context * net) {
 	EMDBG("No more connected with controller!");
 
-	close(net->sockfd);
-	net->sockfd = 0;
+	if(net->sockfd > 2) {
+		close(net->sockfd);
+		net->sockfd = -1;
+	}
 
 	net->status = EM_STATUS_NOT_CONNECTED;
 	net->seq = 0;
@@ -269,13 +272,48 @@ int net_sched_job(
  * Message specific procedures.                                               *
  ******************************************************************************/
 
-int net_se_enb_setup(struct net_context * net, char * msg, int size) {
+int net_se_cell_setup(struct net_context * net, char * msg, int size)
+{
+	uint32_t       seq;
+	struct agent * a = container_of(net, struct agent, net);
+
+	seq = epp_seq(msg, size);
+
+	return net_sched_job(a, seq, JOB_TYPE_CELL_SETUP, 1, 0, msg, size);
+}
+
+int net_se_enb_setup(struct net_context * net, char * msg, int size)
+{
 	uint32_t       seq;
 	struct agent * a = container_of(net, struct agent, net);
 
 	seq = epp_seq(msg, size);
 
 	return net_sched_job(a, seq, JOB_TYPE_ENB_SETUP, 1, 0, msg, size);
+}
+
+int net_te_ue_report(struct net_context * net, char * msg, int size)
+{
+	uint32_t         mod;
+	uint32_t         seq;
+	uint32_t         op;
+
+	struct trigger * t;
+	struct agent *   a = container_of(net, struct agent, net);
+
+	epp_head(msg, size, 0, 0, 0, &mod);
+
+	seq = epp_seq(msg, size);
+	op  = epp_trigger_op(msg, size);
+
+	if(op == EP_OPERATION_ADD) {
+		t = tr_add(&a->trig, mod, EM_TRIGGER_UE_REPORT, 0, 0);
+
+	} else {
+		return tr_del(&a->trig, mod, EM_TRIGGER_UE_REPORT);
+	}
+
+	return net_sched_job(a, seq, JOB_TYPE_UE_REPORT, 1, 0, msg, size);
 }
 
 #if 0
@@ -576,14 +614,12 @@ int net_process_single_event(
 			return net_se_enb_setup(net, msg, size);
 		}
 		break;
-#if 0
-	case SINGLE_EVENT__EVENTS_M_CTRL_CMDS:
-		return net_se_ctrl_cmd(net, msg);
-	case SINGLE_EVENT__EVENTS_M_ENB_CELLS:
-		return net_se_enb_cells(net, msg);
-	case SINGLE_EVENT__EVENTS_M_RAN_SHARING_CTRL:
-		return net_se_ran_sh(net, msg);
-#endif
+	case EP_SIN_CCAP_MSG:
+		if(epp_single_dir(msg, size) == EP_DIR_REQUEST) {
+			EMDBG("Cell capabilities request received!");
+			return net_se_cell_setup(net, msg, size);
+		}
+		break;
 	default:
 		EMDBG("Unknown single event, type=%d", s);
 		break;
@@ -606,6 +642,8 @@ int net_process_trigger_event(
 	case EP_TR_HELLO_MSG:
 		/* Don't really care about the hello reply now */
 		break;
+	case EP_TR_UE_REPORT_MSG:
+		return net_te_ue_report(net, msg, size);
 #if 0
 	case TRIGGER_EVENT__EVENTS_M_UES_ID:
 		return net_te_usid(net, msg);

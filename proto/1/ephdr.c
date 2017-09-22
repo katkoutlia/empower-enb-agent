@@ -50,10 +50,21 @@ int epp_head(
 		return EP_WRONG_VERSION;
 	}
 
-	*type    = h->type;
-	*enb_id  = ntohl(h->id.enb_id);
-	*cell_id = ntohs(h->id.cell_id);
-	*mod_id  = ntohl(h->id.mod_id);
+	if(type) {
+		*type    = h->type;
+	}
+
+	if(enb_id) {
+		*enb_id  = ntohl(h->id.enb_id);
+	}
+
+	if(cell_id) {
+		*cell_id = ntohs(h->id.cell_id);
+	}
+
+	if(mod_id) {
+		*mod_id  = ntohl(h->id.mod_id);
+	}
 
 	return EP_SUCCESS;
 }

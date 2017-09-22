@@ -15,11 +15,16 @@
 
 #include <emproto.h>
 
-int epf_single(char * buf, unsigned int size, ep_sin_type type, ep_dir_type dir)
+int epf_single(
+	char * buf, unsigned int size,
+	ep_sin_type type,
+	ep_op_type  op,
+	ep_dir_type dir)
 {
 	ep_s_hdr * h = (ep_s_hdr *)(buf);
 
 	h->type = (uint8_t)type;
+	h->op   = (uint8_t)op;
 	h->dir  = (uint8_t)dir;
 
 	return sizeof(ep_s_hdr);

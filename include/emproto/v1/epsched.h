@@ -47,4 +47,10 @@ typedef struct __ep_schedule_header {
 	uint32_t interval;  /* Interval of time in ms */
 }__attribute__((packed)) ep_c_hdr;
 
+/* Extracts the direction on an Empower schedule message */
+ep_dir_type epp_schedule_dir(char * buf, unsigned int size);
+
+/* Extracts the schedule type from an Empower message */
+ep_sch_type epp_schedule_type(char * buf, unsigned int size);
+
 #endif /* __EMAGE_PROTOCOLS_SCHEDULE_H */

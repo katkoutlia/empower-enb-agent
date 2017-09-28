@@ -17,12 +17,11 @@
 
 int epf_ccap_rep(
 	char *        buf, unsigned int size,
-	uint32_t      cap,
 	ep_cell_det * cell)
 {
 	ep_ccap_rep * rep = (ep_ccap_rep *)buf;
 
-	rep->cap        = htonl(cap);
+	rep->cap        = htonl(cell->cap);
 	rep->DL_earfcn  = htons(cell->DL_earfcn);
 	rep->DL_prbs    = cell->DL_prbs;
 	rep->UL_earfcn  = htons(cell->UL_earfcn);
@@ -33,12 +32,11 @@ int epf_ccap_rep(
 
 int epp_ccap_rep(
 	char *        buf, unsigned int size,
-	uint32_t *    cap,
 	ep_cell_det * cell)
 {
 	ep_ccap_rep * rep = (ep_ccap_rep *)buf;
 
-	*cap             = ntohl(rep->cap);
+	cell->cap        = ntohl(rep->cap);
 	cell->DL_earfcn  = ntohs(rep->DL_earfcn);
 	cell->DL_prbs    = rep->DL_prbs;
 	cell->UL_earfcn  = ntohs(rep->UL_earfcn);
@@ -70,7 +68,6 @@ int epf_single_ccap_rep(
 	uint32_t      enb_id,
 	uint16_t      cell_id,
 	uint32_t      mod_id,
-	uint32_t      cap_mask,
 	ep_cell_det * cell)
 {
 	int ms = 0;
@@ -90,20 +87,18 @@ int epf_single_ccap_rep(
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REPLY);
 
-	ms += epf_ccap_rep(buf + ms, size - ms, cap_mask, cell);
+	ms += epf_ccap_rep(buf + ms, size - ms, cell);
 
 	return ms;
 }
 
 int epp_single_ccap_rep(
 	char *        buf, unsigned int size,
-	uint32_t *    cap_mask,
 	ep_cell_det * cell)
 {
 	return epp_ccap_rep(
 		buf + sizeof(ep_hdr) + sizeof(ep_s_hdr),
 		size,
-		cap_mask,
 		cell);
 }
 

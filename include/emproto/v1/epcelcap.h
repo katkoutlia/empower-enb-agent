@@ -33,6 +33,7 @@ typedef enum __ep_cell_capabilities_types {
  */
 
 typedef struct __ep_cell_capabilities_reply {
+	uint16_t pci;       /* Physical cell id */
 	uint32_t cap;       /* Cell capabilities */
 	uint16_t DL_earfcn; /* Frequency at which the cell operates in DL */
 	uint8_t  DL_prbs;   /* Physical Resource Block available in the DL */
@@ -49,6 +50,8 @@ typedef struct __ep_cell_capabilities_request {
  ******************************************************************************/
 
 typedef struct el_cell_details {
+	uint16_t pci;
+	uint32_t cap;
 	uint16_t DL_earfcn;
 	uint16_t UL_earfcn;
 	uint8_t  DL_prbs;
@@ -63,13 +66,11 @@ int epf_single_ccap_rep(
 	uint32_t      enb_id,
 	uint16_t      cell_id,
 	uint32_t      mod_id,
-	uint32_t      cap_mask,
 	ep_cell_det * cell);
 
 /* Parse a cell capabilities reply looking for the desired fields */
 int epp_single_ccap_rep(
 	char *        buf, unsigned int size,
-	uint32_t *    cap_mask,
 	ep_cell_det * cell);
 
 /* Format a cell capabilities request.

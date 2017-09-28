@@ -71,13 +71,6 @@ struct em_agent_ops {
 	 */
 	int (* enb_setup_request) (void);
 
-	/* The controller requested to this agent the setup of a specific cell,
-	 * which means how it is configured, what operation supports and so on.
-	 *
-	 * Returns 0 on success, a negative error code otherwise.
-	 */
-	int (* cell_setup_request) (int cell_id);
-
 	/*
 	 * Capabilities-related procedures:
 	 */
@@ -92,82 +85,6 @@ struct em_agent_ops {
 	 * Returns 0 on success, a negative error code otherwise.
 	 */
 	int (* ue_report) (unsigned int mod, int trig_id, int trig_type);
-
-#if 0
-	/*
-	 * Generic stuff.
-	 */
-
-	/* The controller informs this base station that an UE hand-over must be
-	 * done. The request message contains the information about the targets
-	 * of such operations.
-	 *
-	 * Returns 0 on success, a negative error code otherwise.
-	 */
-	int (* handover_request) (
-			EmageMsg * request, EmageMsg ** reply);
-
-	/* Informs the stack that a log for UE activity has been required by the
-	 * controller. The wrap decide what kind of activity needs to be logged,
-	 * now. The id given has to be used to check for its existence later.
-	 *
-	 * Returns 0 on success, a negative error code otherwise.
-	 */
-	int (* UEs_ID_report) (
-		EmageMsg * request, EmageMsg ** reply, unsigned int trigger_id);
-
-	/*
-	 * RRC stuff.
-	 */
-
-	/* Informs the stack that a RRC measurement request has been issued by
-	 * the controller for this base station.
-	 *
-	 * Returns 0 on success, a negative error code otherwise.
-	 */
-	int (* RRC_measurements) (
-		EmageMsg * request, EmageMsg ** reply, unsigned int trigger_id);
-
-	/* Informs the stack that a RRC measurement configuration request has
-	 * been issued by the controller for this base station.
-	 *
-	 * Returns 0 on success, a negative error code otherwise.
-	 */
-	int (* RRC_meas_conf) (
-		EmageMsg * request, EmageMsg ** reply, unsigned int trigger_id);
-
-	/*
-	 * Cell-specific stuff.
-	 */
-
-	/* Informs that the controller issued a request to report the actual
-	 * cell statistics. Negative trigger id identifies such operation as
-	 * once-only or agent scheduled.
-	 *
-	 * Returns 0 on success, a negative error code otherwise.
-	 */
-	int (* cell_statistics_report) (
-		EmageMsg * request, EmageMsg ** reply, unsigned int trigger_id);
-
-
-	/* Informs that the controller required to report about some kind of
-	 * information regarding the eNB cells.
-	 *
-	 * Return 0 on success, a negative error code otherwise.
-	 */
-	int (* eNB_cells_report) (EmageMsg * request, EmageMsg ** reply);
-
-	/*
-	 * RAN sharing.
-	 */
-
-	/* Informs that the controller required some operation related to the
-	 * RAN sharing branch of the cell.
-	 *
-	 * Returns 0 on success, a negative error code otherwise.
-	 */
-	int (* ran_sharing_control) (EmageMsg * request, EmageMsg ** reply);
-#endif
 };
 
 /* Peek the triggers of the given agent and check if a trigger is enabled or

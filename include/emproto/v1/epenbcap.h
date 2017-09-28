@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+#include "epcelcap.h"
+
 #define EP_ENCAP_MAX_CELLS      8
 
 typedef enum __ep_enb_capabilities_types {
@@ -42,7 +44,7 @@ typedef enum __ep_enb_capabilities_types {
 typedef struct __ep_enb_capabilities_reply {
 	uint32_t cap;                          /* eNB capabilities */
 	uint32_t nof_cells;                    /* Number of cells  */
-	uint16_t cell_ids[EP_ENCAP_MAX_CELLS]; /* Id of the cells handled */
+	/* Cells details are appended here, at the end of eNB message */
 }__attribute__((packed)) ep_ecap_rep;
 
 typedef struct __ep_enb_capabilities_request {
@@ -58,19 +60,19 @@ typedef struct __ep_enb_capabilities_request {
  */
 int epf_single_ecap_rep(
 	char * buf, unsigned int size,
-	uint32_t   enb_id,
-	uint16_t   cell_id,
-	uint32_t   mod_id,
-	uint32_t   cap_mask,
-	uint16_t * cell_ids,
-	uint32_t   nof_cells);
+	uint32_t      enb_id,
+	uint16_t      cell_id,
+	uint32_t      mod_id,
+	uint32_t      cap_mask,
+	ep_cell_det * cells,
+	uint32_t      nof_cells);
 
 /* Parse an eNB capabilities reply looking for the desired fields */
 int epp_single_ecap_rep(
 	char * buf, unsigned int size,
-	uint32_t * cap_mask,
-	uint16_t * cell_ids,
-	uint32_t * nof_cells);
+	uint32_t *    cap_mask,
+	ep_cell_det * cells,
+	uint32_t *    nof_cells);
 
 /* Format an eNB capabilities request.
  * Returns the size of the message, or a negative error number.

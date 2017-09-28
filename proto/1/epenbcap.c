@@ -17,18 +17,23 @@
 
 int epf_ecap_rep(
 	char * buf, unsigned int size,
-	uint32_t cap,
-	uint16_t * cell_ids,
-	uint32_t nof_cells)
+	uint32_t      cap,
+	ep_cell_det * cells,
+	uint32_t      nof_cells)
 {
 	int           i   = 0;
 	ep_ecap_rep * rep = (ep_ecap_rep *)buf;
+	ep_ccap_rep * cel = (ep_ccap_rep *)buf + sizeof(ep_ecap_rep);
 
 	rep->cap       = htonl(cap);
 	rep->nof_cells = htonl(nof_cells);
 
 	for(i = 0; i < nof_cells && i < EP_ENCAP_MAX_CELLS; i++) {
-		rep->cell_ids[i] = htons(cell_ids[i]);
+		cel[i].pci       = htons(cells[i].pci);
+		cel[i].DL_earfcn = htons(cells[i].DL_earfcn);
+		cel[i].DL_prbs   = cells[i].DL_prbs;
+		cel[i].UL_earfcn = htons(cells[i].UL_earfcn);
+		cel[i].UL_prbs   = cells[i].UL_prbs;
 	}
 
 	return sizeof(ep_ecap_rep);
@@ -36,18 +41,24 @@ int epf_ecap_rep(
 
 int epp_ecap_rep(
 	char * buf, unsigned int size,
-	uint32_t * cap,
-	uint16_t * cell_ids,
-	uint32_t * nof_cells)
+	uint32_t *    cap,
+	ep_cell_det * cells,
+	uint32_t *    nof_cells)
 {
 	int           i   = 0;
 	ep_ecap_rep * rep = (ep_ecap_rep *)buf;
+	ep_ccap_rep * cel = (ep_ccap_rep *)buf + sizeof(ep_ecap_rep);
 
 	*cap       = ntohl(rep->cap);
 	*nof_cells = ntohl(rep->nof_cells);
 
 	for(i = 0; i < *nof_cells && i < EP_ENCAP_MAX_CELLS; i++) {
-		cell_ids[i] = ntohs(rep->cell_ids[i]);
+		cells[i].pci      = ntohs(cel[i].pci);
+		cells[i].cap      = ntohl(cel[i].cap);
+		cells[i].DL_earfcn= ntohs(cel[i].DL_earfcn);
+		cells[i].DL_prbs  = cel[i].DL_prbs;
+		cells[i].UL_earfcn= ntohs(cel[i].UL_earfcn);
+		cells[i].UL_prbs  = cel[i].UL_prbs;
 	}
 
 	return EP_SUCCESS;
@@ -73,12 +84,12 @@ int epp_ecap_req(char * buf, unsigned int size)
 
 int epf_single_ecap_rep(
 	char *     buf, unsigned int size,
-	uint32_t   enb_id,
-	uint16_t   cell_id,
-	uint32_t   mod_id,
-	uint32_t   cap_mask,
-	uint16_t * cell_ids,
-	uint32_t   nof_cells)
+	uint32_t      enb_id,
+	uint16_t      cell_id,
+	uint32_t      mod_id,
+	uint32_t      cap_mask,
+	ep_cell_det * cells,
+	uint32_t      nof_cells)
 {
 	int ms = 0;
 
@@ -97,22 +108,22 @@ int epf_single_ecap_rep(
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REPLY);
 
-	ms += epf_ecap_rep(buf + ms, size - ms, cap_mask, cell_ids, nof_cells);
+	ms += epf_ecap_rep(buf + ms, size - ms, cap_mask, cells, nof_cells);
 
 	return ms;
 }
 
 int epp_single_ecap_rep(
 	char * buf, unsigned int size,
-	uint32_t * cap_mask,
-	uint16_t * cell_ids,
-	uint32_t * nof_cells)
+	uint32_t *    cap_mask,
+	ep_cell_det * cells,
+	uint32_t *    nof_cells)
 {
 	return epp_ecap_rep(
 		buf + sizeof(ep_hdr) + sizeof(ep_s_hdr),
 		size,
 		cap_mask,
-		cell_ids,
+		cells,
 		nof_cells);
 }
 

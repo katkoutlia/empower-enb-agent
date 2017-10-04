@@ -96,3 +96,37 @@ int epf_single_hello_rep(
 
 	return ms;
 }
+
+/******************************************************************************
+ * Operation on schedule-event messages                                       *
+ ******************************************************************************/
+
+int epf_sched_hello_req(
+	char * buf, unsigned int size,
+	uint32_t enb_id,
+	uint16_t cell_id,
+	uint32_t mod_id,
+	uint32_t interval,
+	uint32_t id)
+{
+	int ms = 0;
+
+	ms += epf_head(
+		buf, size,
+		EP_TYPE_SCHEDULE_MSG,
+		enb_id,
+		cell_id,
+		mod_id);
+
+	ms += epf_schedule(
+		buf + ms,
+		size - ms,
+		EP_ACT_HELLO,
+		EP_OPERATION_UNSPECIFIED,
+		EP_DIR_REQUEST,
+		interval);
+
+	ms += epf_hello_req(buf + ms, size - ms, id);
+
+	return ms;
+}

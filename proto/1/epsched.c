@@ -19,6 +19,23 @@
  * Public API                                                                 *
  ******************************************************************************/
 
+int epf_schedule(
+	char * buf, unsigned int size,
+	ep_act_type type,
+	ep_op_type  op,
+	ep_dir_type dir,
+	uint32_t    interval)
+{
+	ep_c_hdr * h = (ep_c_hdr *)(buf);
+
+	h->type     = (uint8_t)type;
+	h->op       = (uint8_t)op;
+	h->dir      = (uint8_t)dir;
+	h->interval = htonl(interval);
+
+	return sizeof(ep_c_hdr);
+}
+
 ep_dir_type epp_schedule_dir(char * buf, unsigned int size)
 {
 	ep_c_hdr * h = (ep_c_hdr *)(buf + sizeof(ep_hdr));

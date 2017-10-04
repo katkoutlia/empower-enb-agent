@@ -37,6 +37,14 @@ typedef struct __ep_schedule_header {
 	uint32_t interval;  /* Interval of time in ms */
 }__attribute__((packed)) ep_c_hdr;
 
+/* Format a schedule-event message */
+int epf_schedule(
+	char * buf, unsigned int size,
+	ep_act_type type,
+	ep_op_type  op,
+	ep_dir_type dir,
+	uint32_t    interval);
+
 /* Extracts the direction on an Empower schedule message */
 ep_dir_type epp_schedule_dir(char * buf, unsigned int size);
 

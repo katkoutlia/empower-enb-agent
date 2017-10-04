@@ -40,12 +40,12 @@ typedef enum __ep_message_type {
 
 /* Action operated by the message */
 typedef enum __ep_action_type {
-	EP_ACT_INVALID    = 0, /* Invalid */
-	EP_ACT_HELLO      = 1, /* Hello */
-	EP_ACT_ECAP       = 2, /* eNB capabilities */
-	EP_ACT_CCAP       = 3, /* eNB capabilities */
-	EP_ACT_UE_REPORT  = 4, /* UE report */
-	EP_ACT_UE_MEASURE = 5, /* UE RRC measurements */
+	EP_ACT_INVALID       = 0, /* Invalid */
+	EP_ACT_HELLO         = 1, /* Hello */
+	EP_ACT_ECAP          = 2, /* eNB capabilities */
+	EP_ACT_CCAP          = 3, /* eNB capabilities */
+	EP_ACT_UE_REPORT     = 4, /* UE report */
+	EP_ACT_UE_MEASURE    = 5, /* UE RRC measurements */
 } ep_act_type;
 
 #endif /* __EMAGE_PROTOCOLS_MESSAGE_TYPE_H */

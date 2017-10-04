@@ -124,7 +124,8 @@ int sched_perform_hello(struct agent * a, struct sched_job * job) {
 	int sent = 0;
 	int ret  = JOB_CONSUMED;
 
-	blen = epf_single_hello_req(buf, EM_BUF_SIZE, a->b_id, 0, 0, 0);
+	blen = epf_sched_hello_req(
+		buf, EM_BUF_SIZE, a->b_id, 0, 0, job->elapse ,0);
 	ret  = sched_send_msg(a, buf, blen);
 
 	return ret;

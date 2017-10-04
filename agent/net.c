@@ -67,7 +67,7 @@ int net_connected(struct net_context * net) {
 	}
 
 	INIT_LIST_HEAD(&h->next);
-	h->elapse     = 1000;
+	h->elapse     = 2000;
 	h->type       = JOB_TYPE_HELLO;
 	h->reschedule = -1;
 
@@ -331,7 +331,7 @@ int net_process_sched_event(
 
 	switch(s) {
 	case EP_ACT_HELLO:
-		/* Don't really care about the hello reply now */
+		/* Do nothing */
 		break;
 	default:
 		EMDBG("Unknown scheduled event, type=%d", s);
@@ -353,9 +353,7 @@ int net_process_single_event(
 
 	switch(s) {
 	case EP_ACT_HELLO:
-		if(epp_single_dir(msg, size) == EP_DIR_REPLY) {
-			EMDBG("Hello reply received!");
-		}
+		/* Do nothing */
 		break;
 	case EP_ACT_ECAP:
 		if(epp_single_dir(msg, size) == EP_DIR_REQUEST) {

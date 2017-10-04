@@ -55,8 +55,8 @@ debug:
 install:
 	cp ./libemagent.so $(INSTDIR)
 	mkdir -p $(INCLDIR)
-	cp -r ../include/emage.h* $(INCLDIR)/
-	cp -r ../include/emlog.h* $(INCLDIR)/
+	cp -r ../include/emage.h $(INCLDIR)/
+	cp -r ../include/emlog.h $(INCLDIR)/
 	cp -r ../conf/empower $(CONFDIR)
 
 uninstall:

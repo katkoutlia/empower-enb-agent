@@ -26,7 +26,7 @@ ep_dir_type epp_schedule_dir(char * buf, unsigned int size)
 	return (ep_dir_type)h->dir;
 }
 
-ep_sch_type epp_schedule_type(char * buf, unsigned int size)
+ep_act_type epp_schedule_type(char * buf, unsigned int size)
 {
 	ep_c_hdr * h = (ep_c_hdr *)(buf + sizeof(ep_hdr));
 
@@ -34,5 +34,5 @@ ep_sch_type epp_schedule_type(char * buf, unsigned int size)
 		return EP_TYPE_INVALID_MSG;
 	}
 
-	return (ep_sch_type)h->type;
+	return (ep_act_type)h->type;
 }

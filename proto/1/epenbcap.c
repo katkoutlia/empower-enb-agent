@@ -23,7 +23,7 @@ int epf_ecap_rep(
 {
 	int           i   = 0;
 	ep_ecap_rep * rep = (ep_ecap_rep *)buf;
-	ep_ccap_rep * cel = (ep_ccap_rep *)buf + sizeof(ep_ecap_rep);
+	ep_ccap_rep * cel = (ep_ccap_rep *)(buf + sizeof(ep_ecap_rep));
 
 	rep->cap       = htonl(cap);
 	rep->nof_cells = htonl(nof_cells);
@@ -104,7 +104,7 @@ int epf_single_ecap_rep(
 	ms += epf_single(
 		buf + ms,
 		size - ms,
-		EP_SIN_ECAP_MSG,
+		EP_ACT_ECAP,
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REPLY);
 
@@ -146,7 +146,7 @@ int epf_single_ecap_req(
 	ms += epf_single(
 		buf + ms,
 		size - ms,
-		EP_SIN_ECAP_MSG,
+		EP_ACT_ECAP,
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REQUEST);
 

@@ -129,7 +129,7 @@ int epf_trigger_uemeas_rep_fail(
 	ms += epf_trigger(
 		buf + ms,
 		size - ms,
-		EP_TR_UE_MEASURE_MSG,
+		EP_ACT_UE_MEASURE,
 		EP_OPERATION_FAIL,
 		EP_DIR_REPLY);
 
@@ -159,7 +159,7 @@ int epf_trigger_uemeas_rep(
 	ms += epf_trigger(
 		buf + ms,
 		size - ms,
-		EP_TR_UE_MEASURE_MSG,
+		EP_ACT_UE_MEASURE,
 		EP_OPERATION_SUCCESS,
 		EP_DIR_REPLY);
 
@@ -203,7 +203,7 @@ int epf_trigger_uemeas_req(
 	ms += epf_trigger(
 		buf + ms,
 		size - ms,
-		EP_TR_UE_MEASURE_MSG,
+		EP_ACT_UE_MEASURE,
 		op,
 		EP_DIR_REQUEST);
 

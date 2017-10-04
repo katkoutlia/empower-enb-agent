@@ -18,7 +18,7 @@
 
 typedef enum __ep_direction_type {
 	EP_DIR_REQUEST = 0,     /* Request issued */
-	EP_DIR_REPLY,           /* Reply issued */
+	EP_DIR_REPLY   = 1,     /* Reply issued */
 } ep_dir_type;
 
 #endif /* __EMAGE_PROTOCOLS_DIRECTION_H */

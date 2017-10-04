@@ -17,12 +17,12 @@
 #define __EMAGE_PROTOCOLS_OPERATION_TYPE_H
 
 typedef enum __ep_operation_type {
-	EP_OPERATION_UNSPECIFIED = 0, /* Do not care of this field */
-	EP_OPERATION_SUCCESS,         /* Success */
-	EP_OPERATION_FAIL,            /* Failure */
-	EP_OPERATION_NOT_SUPPORTED,   /* Not supported */
-	EP_OPERATION_REM,             /* Remove something */
-	EP_OPERATION_ADD              /* Add something */
+	EP_OPERATION_UNSPECIFIED   = 0, /* Do not care of this field */
+	EP_OPERATION_SUCCESS       = 1, /* Success */
+	EP_OPERATION_FAIL          = 2, /* Failure */
+	EP_OPERATION_NOT_SUPPORTED = 3, /* Not supported */
+	EP_OPERATION_ADD           = 4, /* Add something */
+	EP_OPERATION_REM           = 5  /* Remove something */
 } ep_op_type;
 
 #endif /* __EMAGE_PROTOCOLS_OPERATION_TYPE_H */

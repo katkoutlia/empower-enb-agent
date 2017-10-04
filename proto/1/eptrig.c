@@ -17,7 +17,7 @@
 
 int epf_trigger(
 	char * buf, unsigned int size,
-	ep_sin_type type,
+	ep_act_type type,
 	ep_op_type  op,
 	ep_dir_type dir)
 {
@@ -48,10 +48,10 @@ ep_op_type epp_trigger_op(char * buf, unsigned int size)
 		return EP_TYPE_INVALID_MSG;
 	}
 
-	return (ep_tr_type)h->op;
+	return (ep_act_type)h->op;
 }
 
-ep_tr_type epp_trigger_type(char * buf, unsigned int size)
+ep_act_type epp_trigger_type(char * buf, unsigned int size)
 {
 	ep_t_hdr * h = (ep_t_hdr *)(buf + sizeof(ep_hdr));
 
@@ -59,5 +59,5 @@ ep_tr_type epp_trigger_type(char * buf, unsigned int size)
 		return EP_TYPE_INVALID_MSG;
 	}
 
-	return (ep_tr_type)h->type;
+	return (ep_act_type)h->type;
 }

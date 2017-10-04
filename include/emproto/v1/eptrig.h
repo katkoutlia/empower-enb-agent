@@ -31,13 +31,6 @@
  * Possible types of schedule messages that can occurs
  */
 
-typedef enum __ep_trigger_type {
-	EP_TR_INVALID_MSG = 0,
-	EP_TR_HELLO_MSG,
-	EP_TR_UE_REPORT_MSG,
-	EP_TR_UE_MEASURE_MSG,
-	EP_TR_EXTENDED = 0xff
-} ep_tr_type;
 
 /*
  * Schedule-event messages header
@@ -52,7 +45,7 @@ typedef struct __ep_trigger_header {
 /* Format a trigger-event message */
 int epf_trigger(
 	char * buf, unsigned int size,
-	ep_sin_type type,
+	ep_act_type type,
 	ep_op_type  op,
 	ep_dir_type dir);
 
@@ -63,6 +56,6 @@ ep_dir_type epp_trigger_dir(char * buf, unsigned int size);
 ep_op_type  epp_trigger_op(char * buf, unsigned int size);
 
 /* Extracts the trigger type from an Empower message */
-ep_tr_type  epp_trigger_type(char * buf, unsigned int size);
+ep_act_type  epp_trigger_type(char * buf, unsigned int size);
 
 #endif /* __EMAGE_PROTOCOLS_SCHEDULE_H */

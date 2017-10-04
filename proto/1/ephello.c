@@ -60,7 +60,7 @@ int epf_single_hello_req(
 	ms += epf_single(
 		buf + ms,
 		size - ms,
-		EP_SIN_HELLO_MSG,
+		EP_ACT_HELLO,
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REQUEST);
 
@@ -88,7 +88,7 @@ int epf_single_hello_rep(
 	ms += epf_single(
 		buf + ms,
 		size - ms,
-		EP_SIN_HELLO_MSG,
+		EP_ACT_HELLO,
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REPLY);
 

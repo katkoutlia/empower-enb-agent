@@ -83,7 +83,7 @@ int epf_single_ccap_rep(
 	ms += epf_single(
 		buf + ms,
 		size - ms,
-		EP_SIN_CCAP_MSG,
+		EP_ACT_CCAP,
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REPLY);
 
@@ -121,7 +121,7 @@ int epf_single_ccap_req(
 	ms += epf_single(
 		buf + ms,
 		size - ms,
-		EP_SIN_CCAP_MSG,
+		EP_ACT_CCAP,
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REQUEST);
 

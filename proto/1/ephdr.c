@@ -77,7 +77,7 @@ ep_msg_type epp_msg_type(char * buf, unsigned int size)
 		return EP_TYPE_INVALID_MSG;
 	}
 
-	return (ep_tr_type)h->type;
+	return (ep_msg_type)h->type;
 }
 
 uint32_t epp_seq(char * buf, unsigned int size)

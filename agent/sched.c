@@ -91,19 +91,6 @@ int sched_perform_send(struct agent * a, struct sched_job * job)
 	return sched_send_msg(a, job->args, job->size);
 }
 
-int sched_perform_cell_setup(struct agent * a, struct sched_job * job)
-{
-	uint16_t cell_id = 0;
-
-	/* Extracts only the cell id field */
-	epp_head((char *)job->args, job->size, 0, 0, &cell_id, 0);
-
-	if(a->ops && a->ops->cell_setup_request) {
-		a->ops->cell_setup_request(cell_id);
-	}
-
-	return JOB_CONSUMED;
-}
 
 int sched_perform_enb_setup(struct agent * a, struct sched_job * job)
 {
@@ -132,86 +119,6 @@ int sched_perform_ue_report(struct agent * a, struct sched_job * job)
 	return JOB_CONSUMED;
 }
 
-#if 0
-int sched_perform_enb_cells(struct agent * a, struct sched_job * job)
-{
-	EmageMsg * msg   = (EmageMsg *)job->args;
-	EmageMsg * reply = 0;
-
-	if(a->ops->eNB_cells_report) {
-		a->ops->eNB_cells_report(msg, &reply);
-	}
-
-	/* Something to say at the controller? */
-	if(reply) {
-		sched_send_msg(a, reply);
-		emage_msg__free_unpacked(reply, 0);
-	}
-
-	return JOB_CONSUMED;
-}
-
-int sched_perform_ran_sh(struct agent * a, struct sched_job * job) {
-	EmageMsg * msg   = (EmageMsg *)job->args;
-	EmageMsg * reply = 0;
-
-	if(a->ops->ran_sharing_control) {
-		a->ops->ran_sharing_control(msg, &reply);
-	}
-
-	/* Something to say at the controller? */
-	if(reply) {
-		sched_send_msg(a, reply);
-		emage_msg__free_unpacked(reply, 0);
-	}
-
-	return JOB_CONSUMED;
-}
-
-
-/* This has to be used only in case of trigger events. */
-int sched_perform_cell_tstats(struct agent * a, struct sched_job * job) {
-	struct trigger * t = (struct trigger*)job->args;
-	EmageMsg * reply = 0;
-
-	if(a->ops->cell_statistics_report) {
-		a->ops->cell_statistics_report(t->req, &reply, t->id);
-	}
-
-	/* Something to say at the controller? */
-	if(reply) {
-		sched_send_msg(a, reply);
-		emage_msg__free_unpacked(reply, 0);
-	}
-
-	return JOB_CONSUMED;
-}
-
-int sched_perform_ctrl_cmd(struct agent * a, struct sched_job * job) {
-	EmageMsg * msg   = (EmageMsg *)job->args;
-	EmageMsg * reply = 0;
-
-	switch(msg->se->mctrl_cmds->req->ctrl_cmd_case) {
-	case CONTROLLER_COMMANDS_REQ__CTRL_CMD_CTRL_HO:
-		/* Inform the stack of the hand-over request. */
-		if(a->ops->handover_request) {
-			a->ops->handover_request(msg, &reply);
-		}
-
-		if(reply) {
-			sched_send_msg(a, reply);
-			emage_msg__free_unpacked(reply, 0);
-		}
-
-		break;
-	default:
-		EMDBG("Unknown controller command detected");
-	}
-
-	return JOB_CONSUMED;
-}
-#endif
-
 int sched_perform_hello(struct agent * a, struct sched_job * job) {
 	char buf[EM_BUF_SIZE];
 	int blen = 0;
@@ -223,62 +130,6 @@ int sched_perform_hello(struct agent * a, struct sched_job * job) {
 
 	return ret;
 }
-
-#if 0
-int sched_perform_RRC_mcon(struct agent * a, struct sched_job * job) {
-	struct trigger * t = (struct trigger*)job->args;
-	EmageMsg * reply = 0;
-
-	/* Inform the stack about the activation of the logging mechanism. */
-	if(a->ops->RRC_meas_conf) {
-		a->ops->RRC_meas_conf(t->req, &reply, t->id);
-	}
-
-	/* Something to say at the controller? */
-	if(reply) {
-		sched_send_msg(a, reply);
-		emage_msg__free_unpacked(reply, 0);
-	}
-
-	return JOB_CONSUMED;
-}
-
-int sched_perform_RRC_meas(struct agent * a, struct sched_job * job) {
-	struct trigger * t = (struct trigger*)job->args;
-	EmageMsg * reply = 0;
-
-	/* Inform the stack about the activation of the logging mechanism. */
-	if(a->ops->RRC_measurements) {
-		a->ops->RRC_measurements(t->req, &reply, t->id);
-	}
-
-	/* Something to say at the controller? */
-	if(reply) {
-		sched_send_msg(a, reply);
-		emage_msg__free_unpacked(reply, 0);
-	}
-
-	return JOB_CONSUMED;
-}
-
-int sched_perform_UEs_report(struct agent * a, struct sched_job * job) {
-	struct trigger * t = (struct trigger*)job->args;
-	EmageMsg * reply = 0;
-
-	/* Inform the stack about the activation of the logging mechanism. */
-	if(a->ops->UEs_ID_report) {
-		a->ops->UEs_ID_report(t->req, &reply, t->id);
-	}
-
-	/* Something to say at the controller? */
-	if(reply) {
-		sched_send_msg(a, reply);
-		emage_msg__free_unpacked(reply, 0);
-	}
-
-	return JOB_CONSUMED;
-}
-#endif
 
 int sched_release_job(struct sched_job * job)
 {
@@ -345,35 +196,9 @@ int sched_perform_job(
 	case JOB_TYPE_ENB_SETUP:
 		status = sched_perform_enb_setup(a, job);
 		break;
-	case JOB_TYPE_CELL_SETUP:
-		status = sched_perform_cell_setup(a, job);
-		break;
 	case JOB_TYPE_UE_REPORT:
 		status = sched_perform_ue_report(a, job);
 		break;
-#if 0
-	case JOB_TYPE_UEs_LOG_TRIGGER:
-		status = sched_perform_UEs_report(a, job);
-		break;
-	case JOB_TYPE_RRC_MEAS_TRIGGER:
-		status = sched_perform_RRC_meas(a, job);
-		break;
-	case JOB_TYPE_RRC_MCON_TRIGGER:
-		status = sched_perform_RRC_mcon(a, job);
-		break;
-	case JOB_TYPE_CELL_STATS_TRIGGER:
-		status = sched_perform_cell_tstats(a, job);
-		break;
-	case JOB_TYPE_CTRL_COMMAND:
-		status = sched_perform_ctrl_cmd(a, job);
-		break;
-	case JOB_TYPE_ENB_CELLS:
-		status = sched_perform_enb_cells(a, job);
-		break;
-	case JOB_TYPE_RAN_SHARING:
-		status = sched_perform_ran_sh(a, job);
-		break;
-#endif
 	default:
 		EMDBG("Unknown job cannot be performed, type=%d", job->type);
 	}

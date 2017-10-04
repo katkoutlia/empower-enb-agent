@@ -17,7 +17,7 @@
 
 int epf_single(
 	char * buf, unsigned int size,
-	ep_sin_type type,
+	ep_act_type type,
 	ep_op_type  op,
 	ep_dir_type dir)
 {
@@ -41,9 +41,9 @@ ep_dir_type epp_single_dir(char * buf, unsigned int size)
 	return (ep_dir_type)h->dir;
 }
 
-ep_sin_type epp_single_type(char * buf, unsigned int size)
+ep_act_type epp_single_type(char * buf, unsigned int size)
 {
 	ep_s_hdr * h = (ep_s_hdr *)(buf + sizeof(ep_hdr));
 
-	return (ep_sin_type)h->type;
+	return (ep_act_type)h->type;
 }

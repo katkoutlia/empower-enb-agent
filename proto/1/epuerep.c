@@ -100,7 +100,7 @@ int epf_trigger_uerep_rep_fail(
 	ms += epf_trigger(
 		buf + ms,
 		size - ms,
-		EP_TR_UE_REPORT_MSG,
+		EP_ACT_UE_REPORT,
 		EP_OPERATION_FAIL,
 		EP_DIR_REPLY);
 
@@ -130,7 +130,7 @@ int epf_trigger_uerep_rep(
 	ms += epf_trigger(
 		buf + ms,
 		size - ms,
-		EP_TR_UE_REPORT_MSG,
+		EP_ACT_UE_REPORT,
 		EP_OPERATION_SUCCESS,
 		EP_DIR_REPLY);
 
@@ -171,7 +171,7 @@ int epf_trigger_uerep_req(
 	ms += epf_trigger(
 		buf + ms,
 		size - ms,
-		EP_TR_UE_REPORT_MSG,
+		EP_ACT_UE_REPORT,
 		op,
 		EP_DIR_REQUEST);
 

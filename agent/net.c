@@ -124,7 +124,7 @@ int net_nodelay_socket(int sockfd) {
 int net_not_connected(struct net_context * net) {
 	EMDBG("No more connected with controller!");
 
-	if(net->sockfd > 2) {
+	if(net->sockfd > 0) {
 		close(net->sockfd);
 		net->sockfd = -1;
 	}
@@ -147,7 +147,7 @@ int net_connect_to_controller(struct net_context * net) {
 	struct sockaddr_in srvaddr = {0};
 	struct hostent * ctrli = 0;
 
-	if(net->sockfd == 0) {
+	if(net->sockfd < 0) {
 		status = socket(AF_INET, SOCK_STREAM, 0);
 	}
 
@@ -316,252 +316,6 @@ int net_te_ue_report(struct net_context * net, char * msg, int size)
 	return net_sched_job(a, seq, JOB_TYPE_UE_REPORT, 1, 0, msg, size);
 }
 
-#if 0
-int net_se_ctrl_cmd(struct net_context * net, EmageMsg * msg) {
-	struct agent * a = container_of(net, struct agent, net);
-
-	if(msg->se->mctrl_cmds->controller_commands_m_case !=
-			CONTROLLER_COMMANDS__CONTROLLER_COMMANDS_M_REQ) {
-
-		EMDBG("Invalid command reply received.");
-		return 0;
-
-	}
-
-	return net_sched_job(
-		a, msg->head->t_id, JOB_TYPE_CTRL_COMMAND, 1, 0, msg);
-}
-
-int net_se_enb_cells(struct net_context * net, EmageMsg * msg) {
-	struct agent * a = container_of(net, struct agent, net);
-
-	if(msg->se->menb_cells->e_nb_cells_m_case !=
-		E_NB_CELLS__E_NB_CELLS_M_REQ) {
-
-		EMDBG("Invalid eNB cell reply received.");
-		return 0;
-
-	}
-
-	return net_sched_job(
-		a, msg->head->t_id, JOB_TYPE_ENB_CELLS, 1, 0, msg);
-}
-
-int net_se_ran_sh(struct net_context * net, EmageMsg * msg) {
-	struct agent * a = container_of(net, struct agent, net);
-
-	if(msg->se->mran_sharing_ctrl->ran_sharing_ctrl_m_case !=
-		RAN_SHARING_CTRL__RAN_SHARING_CTRL_M_REQ) {
-
-		EMDBG("Invalid RAN sharing reply received.");
-		return 0;
-
-	}
-
-	return net_sched_job(
-		a, msg->head->t_id, JOB_TYPE_RAN_SHARING, 1, 0, msg);
-}
-
-int net_sc_enb_cells(struct net_context * net, EmageMsg * msg) {
-	struct agent * a = container_of(net, struct agent, net);
-
-	if(msg->sche->menb_cells->e_nb_cells_m_case !=
-		E_NB_CELLS__E_NB_CELLS_M_REQ) {
-
-		EMDBG("Invalid eNB cell reply received.");
-		return 0;
-	}
-
-	/* Remove any job with such id. */
-	if(msg->sche->action == EVENT_ACTION__EA_DEL) {
-		sched_remove_job(
-			msg->head->t_id,
-			JOB_TYPE_ENB_CELLS,
-			&a->sched);
-
-		return 0;
-	}
-
-	return net_sched_job(
-		a,
-		msg->head->t_id,
-		JOB_TYPE_ENB_CELLS,
-		/* In case of no interval, schedule every second. */
-		msg->sche->has_interval ? msg->sche->interval : 1000,
-		-1,
-		msg);
-}
-
-/* Schedule an UE ids trigger job. */
-int net_te_usid(struct net_context * net, EmageMsg * msg) {
-	struct agent * a = container_of(net, struct agent, net);
-	struct trigger * t = 0;
-
-	if(!msg->te->mues_id) {
-		EMDBG("Malformed UEs trigger message!\n");
-		return -1;
-	}
-
-	if(msg->te->mues_id->ues_id_m_case == UES_ID__UES_ID_M_REQ) {
-		if(!msg->te->has_action) {
-			EMDBG("Wrong UEs_ID request format: no action.");
-			return -1;
-		}
-
-		if(msg->te->action == EVENT_ACTION__EA_DEL) {
-			return tr_rem(
-				&a->trig,
-				msg->head->t_id,
-				EM_UEs_ID_REPORT_TRIGGER);
-		} else {
-			t = tr_add(
-				&a->trig,
-				msg->head->t_id,
-				EM_UEs_ID_REPORT_TRIGGER,
-				msg);
-
-			if(!t) {
-				return -1;
-			}
-
-			net_sched_job(
-				a,
-				msg->head->t_id,
-				JOB_TYPE_UEs_LOG_TRIGGER,
-				1,
-				0,
-				(void *)t);
-		}
-	}
-
-	return 0;
-}
-
-/* Schedule an RRC measurement trigger job. */
-int net_te_rrc_meas(struct net_context * net, EmageMsg * msg) {
-	struct agent * a = container_of(net, struct agent, net);
-	struct trigger * t = 0;
-
-	if(!msg->te->mrrc_meas) {
-		EMDBG("Malformed RRC measurement trigger message!\n");
-		return -1;
-	}
-
-	if(!msg->te->has_action) {
-		EMDBG("Wrong UEs_ID request format: no action.");
-		return -1;
-	}
-
-	if(msg->te->action == EVENT_ACTION__EA_DEL) {
-		return tr_rem(
-			&a->trig,
-			msg->head->t_id,
-			EM_RRC_MEAS_TRIGGER);
-	} else {
-		t = tr_add(
-			&a->trig,
-			msg->head->t_id,
-			EM_RRC_MEAS_TRIGGER,
-			msg);
-
-		if(!t) {
-			return -1;
-		}
-
-		net_sched_job(
-			a,
-			msg->head->t_id,
-			JOB_TYPE_RRC_MEAS_TRIGGER,
-			1,
-			0,
-			(void *)t);
-	}
-
-	return 0;
-}
-
-/* Schedule an RRC measurement configuration trigger job. */
-int net_te_rrc_mcon(struct net_context * net, EmageMsg * msg) {
-	struct agent * a = container_of(net, struct agent, net);
-	struct trigger * t = 0;
-
-	if(!msg->te->mrrc_meas) {
-		EMDBG("Malformed RRC measurement trigger message!\n");
-		return -1;
-	}
-
-	if(!msg->te->has_action) {
-		EMDBG("Wrong UEs_ID request format: no action.");
-		return -1;
-	}
-
-	if(msg->te->action == EVENT_ACTION__EA_DEL) {
-		return tr_rem(
-			&a->trig,
-			msg->head->t_id,
-			EM_RRC_MEAS_CONF_TRIGGER);
-	} else {
-		t = tr_add(
-			&a->trig,
-			msg->head->t_id,
-			EM_RRC_MEAS_CONF_TRIGGER,
-			msg);
-
-		if(!t) {
-			return -1;
-		}
-
-		net_sched_job(
-			a,
-			msg->head->t_id,
-			JOB_TYPE_RRC_MCON_TRIGGER,
-			1,
-			0,
-			(void *)t);
-	}
-
-	return 0;
-}
-
-/* Schedule a cell statistics request trigger job. */
-int net_te_cell_stats(struct net_context * net, EmageMsg * msg) {
-	struct agent * a = container_of(net, struct agent, net);
-	struct trigger * t = 0;
-
-	if(!msg->te->mcell_stats) {
-		EMDBG("Malformed cell statistics trigger message!\n");
-		return -1;
-	}
-
-	if(msg->te->action == EVENT_ACTION__EA_DEL) {
-		return tr_rem(
-			&a->trig,
-			msg->head->t_id,
-			EM_CELL_STATS_TRIGGER);
-	} else {
-		t = tr_add(
-			&a->trig,
-			msg->head->t_id,
-			EM_CELL_STATS_TRIGGER,
-			msg);
-
-		if(!t) {
-			return -1;
-		}
-
-		net_sched_job(
-			a,
-			msg->head->t_id,
-			JOB_TYPE_CELL_STATS_TRIGGER,
-			1,
-			0,
-			(void *)t);
-	}
-
-	return 0;
-}
-#endif
-
 /******************************************************************************
  * Top-level message handlers.                                                *
  ******************************************************************************/
@@ -569,21 +323,17 @@ int net_te_cell_stats(struct net_context * net, EmageMsg * msg) {
 int net_process_sched_event(
 	struct net_context * net, char * msg, unsigned int size)
 {
-	ep_sch_type s = epp_schedule_type(msg, size);
+	ep_act_type s = epp_schedule_type(msg, size);
 
-	if(s == EP_SCH_INVALID_MSG) {
+	if(s == EP_ACT_INVALID) {
 		EMDBG("Malformed schedule-event message received!\n");
 		return -1;
 	}
 
 	switch(s) {
-	case EP_SCH_HELLO_MSG:
+	case EP_ACT_HELLO:
 		/* Don't really care about the hello reply now */
 		break;
-#if 0
-	case SCHEDULE_EVENT__EVENTS_M_ENB_CELLS:
-		return net_sc_enb_cells(net, msg);
-#endif
 	default:
 		EMDBG("Unknown scheduled event, type=%d", s);
 		break;
@@ -595,29 +345,23 @@ int net_process_sched_event(
 int net_process_single_event(
 	struct net_context * net, char * msg, unsigned int size)
 {
-	ep_sin_type s = epp_single_type(msg, size);
+	ep_act_type s = epp_single_type(msg, size);
 
-	if(s == EP_SIN_INVALID_MSG) {
+	if(s == EP_ACT_INVALID) {
 		EMDBG("Malformed single-event message received!\n");
 		return -1;
 	}
 
 	switch(s) {
-	case EP_SIN_HELLO_MSG:
+	case EP_ACT_HELLO:
 		if(epp_single_dir(msg, size) == EP_DIR_REPLY) {
 			EMDBG("Hello reply received!");
 		}
 		break;
-	case EP_SIN_ECAP_MSG:
+	case EP_ACT_ECAP:
 		if(epp_single_dir(msg, size) == EP_DIR_REQUEST) {
 			EMDBG("eNB capabilities request received!");
 			return net_se_enb_setup(net, msg, size);
-		}
-		break;
-	case EP_SIN_CCAP_MSG:
-		if(epp_single_dir(msg, size) == EP_DIR_REQUEST) {
-			EMDBG("Cell capabilities request received!");
-			return net_se_cell_setup(net, msg, size);
 		}
 		break;
 	default:
@@ -631,18 +375,18 @@ int net_process_single_event(
 int net_process_trigger_event(
 	struct net_context * net, char * msg, unsigned int size)
 {
-	ep_tr_type t = epp_trigger_type(msg, size);
+	ep_act_type t = epp_trigger_type(msg, size);
 
-	if(t == EP_TR_INVALID_MSG) {
+	if(t == EP_ACT_INVALID) {
 		EMDBG("Malformed trigger-event message received!\n");
 		return -1;
 	}
 
 	switch(t) {
-	case EP_TR_HELLO_MSG:
+	case EP_ACT_HELLO:
 		/* Don't really care about the hello reply now */
 		break;
-	case EP_TR_UE_REPORT_MSG:
+	case EP_ACT_UE_REPORT:
 		return net_te_ue_report(net, msg, size);
 #if 0
 	case TRIGGER_EVENT__EVENTS_M_UES_ID:
@@ -785,6 +529,7 @@ int net_start(struct net_context * net)
 {
 	/* 1 second interval by default. */
 	net->interval = 100;
+	net->sockfd   = -1;
 
 	pthread_spin_init(&net->lock, 0);
 

@@ -27,16 +27,6 @@
 #include "epop.h"
 
 /*
- * Possible types of schedule messages that can occurs
- */
-
-typedef enum __ep_schedule_type {
-	EP_SCH_INVALID_MSG = 0,
-	EP_SCH_HELLO_MSG,
-	EP_SCH_EXTENDED = 0xff
-} ep_sch_type;
-
-/*
  * Schedule-event messages header
  */
 
@@ -51,6 +41,6 @@ typedef struct __ep_schedule_header {
 ep_dir_type epp_schedule_dir(char * buf, unsigned int size);
 
 /* Extracts the schedule type from an Empower message */
-ep_sch_type epp_schedule_type(char * buf, unsigned int size);
+ep_act_type epp_schedule_type(char * buf, unsigned int size);
 
 #endif /* __EMAGE_PROTOCOLS_SCHEDULE_H */

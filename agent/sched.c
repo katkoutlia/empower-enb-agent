@@ -29,7 +29,6 @@
 #include "agent.h"
 #include "sched.h"
 
-#include "msg.h"
 #include "emlist.h"
 #include "net.h"
 

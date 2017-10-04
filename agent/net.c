@@ -38,7 +38,6 @@
 #include <emproto.h>
 
 #include "agent.h"
-#include "msg.h"
 #include "net.h"
 #include "sched.h"
 

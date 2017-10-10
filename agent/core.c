@@ -216,6 +216,8 @@ int em_init(void) {
 
 int em_release_agent(struct agent * a) {
 	free(a);
+
+	return 0;
 }
 
 int em_send(int enb_id, char * msg, unsigned int size) {

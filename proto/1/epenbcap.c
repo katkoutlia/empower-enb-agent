@@ -36,7 +36,7 @@ int epf_ecap_rep(
 		cel[i].UL_prbs   = cells[i].UL_prbs;
 	}
 
-	return sizeof(ep_ecap_rep);
+	return sizeof(ep_ecap_rep) + (sizeof(ep_ccap_rep) * i);
 }
 
 int epp_ecap_rep(

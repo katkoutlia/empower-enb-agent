@@ -44,8 +44,42 @@
 #include "emlist.h"
 #include "sched.h"
 
-#define NET_RECONNECT_TIME      1000000 /* 1sec in usec */
-#define NET_WAIT_TIME           16000   /* 16ms in usec */
+#define NET_WAIT_TIME           300      /* 300ms in usec */
+
+#ifdef EM_DISSECT_MSG
+
+void net_show_msg(char * buf, int size, int send)
+{
+	int i;
+
+	EMDBG("Dissecting message, size=%d", size);
+
+	if(send) {
+		printf("-------------------------------------------------->\n");
+	} else {
+		printf("<--------------------------------------------------\n");
+	}
+
+	printf("    00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f\n");
+
+	for(i = 0; i < size; i++) {
+		if(i % 16 == 0) {
+			printf("\n%03x ", i);
+		}
+
+		printf("%02x ", (unsigned char)buf[i]);
+	}
+
+	if(send) {
+		printf(
+		"\n-------------------------------------------------->\n");
+	} else {
+		printf(
+		"\n<--------------------------------------------------\n");
+	}
+}
+
+#endif /* EM_DISSECT_MSG */
 
 /******************************************************************************
  * Network procedures.                                                        *
@@ -203,19 +237,9 @@ int net_recv(struct net_context * context, char * buf, unsigned int size) {
 
 /* Send data. */
 int net_send(struct net_context * context, char * buf, unsigned int size) {
-#ifdef EM_DEBUG_SEND
-	int i = 0;
-
-	for(i = 0; i < size; i++) {
-		if(i % 16 == 0) {
-			printf("\n");
-		}
-
-		printf("%02x ", (unsigned char)buf[i]);
-	}
-
-	printf("\n");
-#endif
+#ifdef EM_DISSECT_MSG
+	net_show_msg(buf + EP_PROLOGUE_SIZE, size, 1);
+#endif /* EM_DISSECT_MSG */
 
 	/* NOTE:
 	 * Since sending on a dead socket can cause a signal to be issued to the
@@ -385,16 +409,6 @@ int net_process_trigger_event(
 		break;
 	case EP_ACT_UE_REPORT:
 		return net_te_ue_report(net, msg, size);
-#if 0
-	case TRIGGER_EVENT__EVENTS_M_UES_ID:
-		return net_te_usid(net, msg);
-	case TRIGGER_EVENT__EVENTS_M_RRC_MEAS:
-		return net_te_rrc_meas(net, msg);
-	case TRIGGER_EVENT__EVENTS_M_UE_RRC_MEAS_CONF:
-		return net_te_rrc_mcon(net, msg);
-	case TRIGGER_EVENT__EVENTS_M_CELL_STATS:
-		return net_te_cell_stats(net, msg);
-#endif
 	default:
 		EMDBG("Unknown trigger event, type=%d", t);
 		break;
@@ -407,6 +421,10 @@ int net_process_trigger_event(
 int net_process_message(struct net_context * net, char * msg, unsigned int size)
 {
 	ep_msg_type mt = epp_msg_type(msg, size);
+
+#ifdef EM_DISSECT_MSG
+	net_show_msg(msg, size, 0);
+#endif /* EM_DISSECT_MSG */
 
 	switch(mt) {
 	/* Single events messages. */
@@ -442,6 +460,7 @@ void * net_loop(void * args)
 
 	unsigned int wi = net->interval;
 	struct timespec wt = {0};	/* Wait time. */
+	struct timespec wc = {0};	/* Wait time for reconnection. */
 	struct timespec td = {0};
 
 	/* Convert the wait interval in a timespec struct. */
@@ -451,6 +470,10 @@ void * net_loop(void * args)
 	}
 	wt.tv_nsec = wi * 1000000;
 
+	/* At least 1 second between re-connection attempts */
+	wc.tv_sec  = 1 + wt.tv_sec;
+	wc.tv_nsec = wt.tv_nsec;
+
 	while(!net->stop) {
 next:
 		if(net->status == EM_STATUS_NOT_CONNECTED) {
@@ -459,7 +482,7 @@ next:
 			}
 
 			/* Relax the CPU. */
-			usleep(NET_RECONNECT_TIME);
+			nanosleep(&wc, &td);
 			continue;
 		}
 
@@ -473,7 +496,7 @@ next:
 			if(op <= 0) {
 				if(errno == EAGAIN) {
 					/* Relax the CPU. */
-					usleep(NET_WAIT_TIME);
+					nanosleep(&wt, &td);
 					continue;
 				}
 
@@ -498,7 +521,7 @@ next:
 			if(op <= 0) {
 				if(errno == EAGAIN) {
 					/* Relax the CPU. */
-					usleep(NET_WAIT_TIME);
+					nanosleep(&wt, &td);
 					continue;
 				}
 
@@ -524,8 +547,7 @@ next:
 
 int net_start(struct net_context * net)
 {
-	/* 1 second interval by default. */
-	net->interval = 100;
+	net->interval = NET_WAIT_TIME;
 	net->sockfd   = -1;
 
 	pthread_spin_init(&net->lock, 0);

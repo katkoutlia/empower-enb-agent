@@ -25,6 +25,11 @@
 #include <endian.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 #define EP_UE_MEASUREMENT_MAX_UES    64
 
 /*
@@ -132,5 +137,9 @@ int epp_trigger_uemeas_req(
 	uint8_t  * meas_id,
 	uint16_t * pci,
 	uint16_t * earfcn);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_UE_REPORT_H */

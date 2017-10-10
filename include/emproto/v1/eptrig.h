@@ -27,6 +27,11 @@
 
 #include "epop.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 /*
  * Possible types of schedule messages that can occurs
  */
@@ -57,5 +62,9 @@ ep_op_type  epp_trigger_op(char * buf, unsigned int size);
 
 /* Extracts the trigger type from an Empower message */
 ep_act_type  epp_trigger_type(char * buf, unsigned int size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_PROTOCOLS_SCHEDULE_H */

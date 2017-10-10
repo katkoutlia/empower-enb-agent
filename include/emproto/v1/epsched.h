@@ -26,6 +26,11 @@
 
 #include "epop.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 /*
  * Schedule-event messages header
  */
@@ -50,5 +55,9 @@ ep_dir_type epp_schedule_dir(char * buf, unsigned int size);
 
 /* Extracts the schedule type from an Empower message */
 ep_act_type epp_schedule_type(char * buf, unsigned int size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_PROTOCOLS_SCHEDULE_H */

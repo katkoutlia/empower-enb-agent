@@ -25,6 +25,11 @@
 #include <endian.h>
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 #define EP_UE_REPORT_MAX_UES    64
 
 /*
@@ -118,5 +123,9 @@ int epf_trigger_uerep_req(
 
 /* Parse an UE report request for the desired fields */
 int epp_trigger_uerep_req(char * buf, unsigned int size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_UE_REPORT_H */

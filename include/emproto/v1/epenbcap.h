@@ -26,15 +26,20 @@
 
 #include "epcelcap.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 #define EP_ENCAP_MAX_CELLS      8
 
 typedef enum __ep_enb_capabilities_types {
 	/* Can't do anything except present himself */
-	EP_ECAP_NOTHING = 0,
-	/* Can report connected UEs */
-	EP_ECAP_UE_REPORT,
-	/* Can report connected UEs signal power */
-	EP_ECAP_UE_MEASURE,
+	EP_ECAP_NOTHING    = 0,
+	/* Can report UEs */
+	EP_ECAP_UE_REPORT  = 1,
+	/* Can report UEs signal power */
+	EP_ECAP_UE_MEASURE = 2,
 } ep_ecap_type;
 
 /*
@@ -85,5 +90,9 @@ int epf_single_ecap_req(
 
 /* Parse an eNB capabilities request for the desired fields */
 int epp_single_ecap_req(char * buf, unsigned int size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_ENB_CAPABILITIES_H */

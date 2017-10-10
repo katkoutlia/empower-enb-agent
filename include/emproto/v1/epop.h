@@ -16,6 +16,11 @@
 #ifndef __EMAGE_PROTOCOLS_OPERATION_TYPE_H
 #define __EMAGE_PROTOCOLS_OPERATION_TYPE_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 typedef enum __ep_operation_type {
 	EP_OPERATION_UNSPECIFIED   = 0, /* Do not care of this field */
 	EP_OPERATION_SUCCESS       = 1, /* Success */
@@ -24,5 +29,9 @@ typedef enum __ep_operation_type {
 	EP_OPERATION_ADD           = 4, /* Add something */
 	EP_OPERATION_REM           = 5  /* Remove something */
 } ep_op_type;
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_PROTOCOLS_OPERATION_TYPE_H */

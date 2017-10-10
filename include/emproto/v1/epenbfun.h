@@ -23,6 +23,11 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 /*
  * eNB functionality message
  */
@@ -39,5 +44,8 @@ typedef struct __ep_enb_functionality_request {
  * Operation on single-event messages                                         *
  ******************************************************************************/
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_ENB_FUNCTIONALITY_H */

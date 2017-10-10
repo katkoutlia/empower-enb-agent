@@ -22,6 +22,11 @@
 #ifndef __EMAGE_PROTOCOLS_v1_H
 #define __EMAGE_PROTOCOLS_v1_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 #ifdef EMPOWER_PROTOCOL_VERS
 #error "Trying to mix different version of the Empower protocols!"
 #endif /* EMPOWER_PROTOCOL_VERS */
@@ -49,5 +54,9 @@
 #include "epcelcap.h"
 #include "epuerep.h"
 #include "epuemeas.h"
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_PROTOCOLS_v1_H */

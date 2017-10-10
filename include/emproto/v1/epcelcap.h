@@ -23,6 +23,11 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 typedef enum __ep_cell_capabilities_types {
 	/* Can't do anything except present himself */
 	EP_CCAP_NOTHING = 0,
@@ -84,5 +89,9 @@ int epf_single_ccap_req(
 
 /* Parse a cell capabilities request for the desired fields */
 int epp_single_ccap_req(char * buf, unsigned int size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_CELL_CAPABILITIES_H */

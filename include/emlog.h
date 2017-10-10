@@ -20,6 +20,11 @@
 #ifndef __EMAGE_LOG_H
 #define __EMAGE_LOG_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 #include <stdio.h>
 
 /* Log routine for every feedback. */
@@ -27,12 +32,20 @@
 	printf("emage: "x"\n", ##__VA_ARGS__)
 
 #ifdef EM_DEBUG
+
 /* Debugging routine. */
 #define EMDBG(x, ...)                                                   \
 	printf("emage-debug:"x"\n", ##__VA_ARGS__)
-#else
+
+#else /* EM_DEBUG */
+
 /* Debugging routine. */
 #define EMDBG(x, ...)
-#endif
 
-#endif
+#endif /* EM_DEBUG */
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* __EMAGE_LOG_H */

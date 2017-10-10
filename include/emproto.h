@@ -25,6 +25,15 @@
 #ifndef __EMAGE_PROTOCOLS_H
 #define __EMAGE_PROTOCOLS_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 #include "emproto/v1/epdefs.h"
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_PROTOCOLS_H */

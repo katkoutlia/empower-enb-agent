@@ -27,6 +27,11 @@
 
 #include "epop.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 /*
  * Single-event messages header
  */
@@ -49,5 +54,9 @@ ep_dir_type epp_single_dir(char * buf, unsigned int size);
 
 /* Extracts the type from an Empower single message */
 ep_act_type epp_single_type(char * buf, unsigned int size);
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_PROTOCOLS_SINGLE_H */

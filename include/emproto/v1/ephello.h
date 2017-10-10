@@ -24,6 +24,11 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 /*
  * Hello message
  */
@@ -65,8 +70,33 @@ int epf_sched_hello_req(
 	uint32_t interval,
 	uint32_t id);
 
+/* Parse an Hello request message */
+int epp_sched_hello_req(
+	char * buf, unsigned int size,
+	uint32_t * id);
+
+/* Format an Hello reply message with the desired fields.
+ * Returns the size of the message, or a negative error number.
+ */
+int epf_sched_hello_rep(
+	char * buf, unsigned int size,
+	uint32_t enb_id,
+	uint16_t cell_id,
+	uint32_t mod_id,
+	uint32_t interval,
+	uint32_t id);
+
+/* Parse an Hello reply message */
+int epp_sched_hello_rep(
+	char * buf, unsigned int size,
+	uint32_t * id);
+
 /******************************************************************************
  * Operation on trigger-event messages                                        *
  ******************************************************************************/
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_PROTOCOLS_HELLO_H */

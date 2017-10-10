@@ -28,6 +28,11 @@
 
 #include "eptype.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 typedef struct __ep_header_id {
 	uint32_t enb_id;        /* Base station identifier */
 	uint16_t cell_id;       /* Physical cell id */
@@ -70,5 +75,8 @@ uint32_t    epp_seq(char * buf, unsigned int size);
 /* Inject a sequence number in the header. */
 int         epf_seq(char * buf, unsigned int size, uint32_t seq);
 
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_PROTOCOLS_HEADER_H */

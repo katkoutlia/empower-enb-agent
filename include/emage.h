@@ -20,6 +20,11 @@
 #ifndef __EMAGE_H
 #define __EMAGE_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 /* Possible triggers which can be installed in the agent. */
 typedef enum em_trigger_type {
 	EM_TRIGGER_NONE = 0,
@@ -134,4 +139,8 @@ int em_stop(void);
  */
 int em_terminate_agent(int b_id);
 
-#endif
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
+
+#endif /* __EMAGE_H */

@@ -16,9 +16,18 @@
 #ifndef __EMAGE_PROTOCOLS_DIRECTION_H
 #define __EMAGE_PROTOCOLS_DIRECTION_H
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif /* __cplusplus */
+
 typedef enum __ep_direction_type {
 	EP_DIR_REQUEST = 0,     /* Request issued */
 	EP_DIR_REPLY   = 1,     /* Reply issued */
 } ep_dir_type;
+
+#ifdef __cplusplus
+}
+#endif /* __cplusplus */
 
 #endif /* __EMAGE_PROTOCOLS_DIRECTION_H */

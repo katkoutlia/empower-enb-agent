@@ -59,28 +59,17 @@ class EP_OPERATION_TYPE:
     SUCCESS          = 1
     FAILURE          = 2
     NOT_SUPPORTED    = 3
-    REM              = 4
-    ADD              = 5
+    ADD              = 4
+    REM              = 5
 
 # Schedule-event message types
-class EP_SCH_TYPE:
+class EP_ACT_TYPE:
     INVALID          = 0
     HELLO            = 1
-    EXTENDED         = 255
-
-# Single-event message types
-class EP_SIN_TYPE:
-    INVALID          = 0
-    HELLO            = 1
-    ECAP             = 2
-    CCAP             = 3
-    EXTENDED         = 255
-
-# Trigger-event message types
-class EP_TR_TYPE:
-    INVALID          = 0
-    HELLO            = 1
-    UE_REPORT        = 2
+    ENB_CAP          = 2
+    CELL_CAP         = 3
+    UE_REPORT        = 4
+    UE_MEAS          = 5
     EXTENDED         = 255
 
 #
@@ -88,13 +77,17 @@ class EP_TR_TYPE:
 #
 
 class ep_cell_details(ctypes.Structure):
+    """Opaque structure carrying Cell details"""
     _fields_ = [
+        ("pci",       ctypes.c_uint16),
+        ("cap",       ctypes.c_uint32),
         ("DL_earfcn", ctypes.c_uint16),
         ("UL_earfcn", ctypes.c_uint16),
         ("DL_prbs",   ctypes.c_uint8),
         ("UL_prbs",   ctypes.c_uint8)]
 
 class ep_ue_details(ctypes.Structure):
+    """Opaque structure carrying UE details"""
     _fields_ = [
         ("pci",  ctypes.c_uint16),
         ("plmn", ctypes.c_uint32),
@@ -102,6 +95,7 @@ class ep_ue_details(ctypes.Structure):
         ("imsi", ctypes.c_uint64)]
 
 class ep_ue_measure(ctypes.Structure):
+    """Opaque structure carrying UE measurements details"""
     _fields_ = [
         ("rnti", ctypes.c_uint16),
         ("rsrp", ctypes.c_uint16),
@@ -119,40 +113,51 @@ class Emproto(object):
     EP_SUCCESS       = 0
     EP_ERROR         = -1
     EP_WRONG_VERSION = -2
+
+    ############################################################################
     
     #
     # Master header
     #
 
-    def epf_head(buf, size, m_type, enb_id, cell_id, mod_id):
+    def format_head(buf, size, m_type, enb_id, cell_id, mod_id):
+        """Format an header with the meaningful IDs"""
         global _emproto
         return _emproto.epp_head(buf, size, m_type, enb_id, cell_id, mod_id)
 
-    def epp_head(buf, size, m_type, enb_id, cell_id, mod_id):
+    def parse_head(buf, size, m_type, enb_id, cell_id, mod_id):
+        """Parse an header extracting the meaningful IDs"""
         global _emproto
         return _emproto.epp_head(buf, size, m_type, enb_id, cell_id, mod_id)
 
-    def epp_msg_type(buf, size):
+    def parse_msg_type(buf, size):
+        """Parse the message type from a message"""
         global _emproto
         return _emproto.epp_msg_type(buf, size)
 
-    def epp_seq(buf, size):
+    def format_seq(buf, size, seq):
+        """Format the sequence number in a message"""
+        global _emproto
+        return _emproto.epf_seq(buf, size, seq)
+    
+    def parse_seq(buf, size):
+        """Extracts the sequence number from a message"""
         global _emproto
         return _emproto.epp_seq(buf, size)
 
-    def epf_seq(buf, size, seq):
-        global _emproto
-        return _emproto.epf_seq(buf, size, seq)
-
+    ############################################################################
+    
     #
     # Schedule-event messages
     #
 
-    def epp_schedule_dir(buf, size):
+    def parse_schedule_dir(buf, size):
+        """Parse the schedule-event message direction"""
         global _emproto
         return _emproto.epp_schedule_dir(buf, size)
 
-    def epp_schedule_type(buf, size):
+    def parse_schedule_type(buf, size):
+        """Parse the schedule-event message type"""
         global _emproto
         return _emproto.epp_schedule_type(buf, size)
 
@@ -160,11 +165,13 @@ class Emproto(object):
     # Single-event messages
     #
 
-    def epp_single_dir(buf, size):
+    def parse_single_dir(buf, size):
+        """Parse the single-event message direction"""
         global _emproto
         return _emproto.epp_single_dir(buf, size)
 
-    def epp_single_type(buf, size):
+    def parse_single_type(buf, size):
+        """Parse the single-event message type"""
         global _emproto
         return _emproto.epp_single_type(buf, size)
 
@@ -172,47 +179,92 @@ class Emproto(object):
     # Trigger-event messages
     #
 
-    def epp_trigger_dir(buf, size):
+    def parse_trigger_dir(buf, size):
+        """Parse the trigger-event message direction"""
         global _emproto
         return _emproto.epp_trigger_dir(buf, size)
 
-    def epp_trigger_op(buf, size):
+    def parse_trigger_op(buf, size):
+        """Parse the trigger-event message operation (add/remove/...)"""
         global _emproto
         return _emproto.epp_trigger_op(buf, size)
 
-    def epp_trigger_type(buf, size):
+    def parse_trigger_type(buf, size):
+        """Parse the trigger-event message type"""
         global _emproto
         return _emproto.epp_trigger_type(buf, size)
+
+    ############################################################################
     
     #
     # Hello message
     #
-
-    def epf_single_hello_rep(buf, size, enb_id, cell_id, mod_id, hello_id):
+    #
+    # Schedule-events:
+    
+    def format_sched_hello_rep(buf, size, enb_id, cell_id, mod_id, interval, hello_id):
+        """Format a schedule-event Hello message reply"""
         global _emproto
-        return _emproto.epf_single_hello_rep(buf, size, enb_id, cell_id, mod_id, hello_id)
+        return _emproto.epf_sched_hello_rep(buf, size, enb_id, cell_id, mod_id, interval, hello_id)
 
-    def epf_single_hello_req(buf, size, enb_id, cell_id, mod_id, hello_id):
+    def parse_sched_hello_rep(buf, size, hello_id):
+        """Parse a schedule-event Hello message reply"""
         global _emproto
-        return _emproto.epf_single_hello_req(buf, size, enb_id, cell_id, mod_id, hello_id)
+        return _emproto.epf_sched_hello_rep(buf, size, hello_id)
+
+    def format_sched_hello_req(buf, size, enb_id, cell_id, mod_id, interval, hello_id):
+        """Format a schedule-event hello message request"""
+        global _emproto
+        return _emproto.epf_sched_hello_req(buf, size, enb_id, cell_id, mod_id, interval, hello_id)
+
+    def parse_sched_hello_req(buf, size, hello_id):
+        """Parse a schedule-event hello message request"""
+        global _emproto
+        return _emproto.epf_sched_hello_req(buf, size, hello_id)
+
+    # Single-events:
+    
+    def format_single_hello_rep(buf, size, enb_id, cell_id, mod_id, hello_id):
+        """Format a single-event Hello message reply"""
+        global _emproto
+        return _emproto.epf_sched_hello_rep(buf, size, enb_id, cell_id, mod_id, hello_id)
+
+    def parse_single_hello_rep(buf, size, hello_id):
+        """Parse a single-event Hello message reply"""
+        global _emproto
+        return _emproto.epf_sched_hello_rep(buf, size, hello_id)
+
+    def format_single_hello_req(buf, size, enb_id, cell_id, mod_id, hello_id):
+        """Format a single-event Hello message request"""
+        global _emproto
+        return _emproto.epf_sched_hello_req(buf, size, enb_id, cell_id, mod_id, hello_id)
+
+    def parse_single_hello_req(buf, size, hello_id):
+        """Parse a single-event Hello message request"""
+        global _emproto
+        return _emproto.epf_sched_hello_req(buf, size, hello_id)
 
     #
     # Cell capabilities message
     #
 
-    def epf_single_ccap_rep(buf, size, enb_id, cell_id, mod_id, cap_mask, cell_d):
+    def format_single_ccap_rep(buf, size, enb_id, cell_id, mod_id, cap_mask, cell_d):
+        """Format a single-event cell capabilities reply"""
         global _emproto
         return _emproto.epf_single_ccap_rep(buf, size, enb_id, cell_id, mod_id, cap_mask, cell_d)
     
-    def epp_single_ccap_rep(buf, size, cap_mask, cell_d):
+    def parse_single_ccap_rep(buf, size, cap_mask, cell_d):
+        """Parse a single-event cell capabilities reply"""
         global _emproto
         return _emproto.epp_single_ccap_rep(buf, size, cap_mask, cell_d)
 
-    def epf_single_ccap_req(buf, size, enb_id, cell_id, mod_id):
+    def format_single_ccap_req(buf, size, enb_id, cell_id, mod_id):
+        """Format a single-event cell capabilities request"""
         global _emproto
         return _emproto.epf_single_ccap_req(buf, size, enb_id, cell_id, mod_id)
     
-    def epp_single_ccap_req(buf, size):
+    def parse_single_ccap_req(buf, size):
+        """Parse a single-event cell capabilities request"""
         global _emproto
         return _emproto.epp_single_ccap_req(buf, size)
 
@@ -220,19 +272,23 @@ class Emproto(object):
     # eNB capabilities message
     #
 
-    def epf_single_ecap_rep(buf, size, enb_id, cell_id, mod_id, cap_mask, cells, nof_cells):
+    def format_single_ecap_rep(buf, size, enb_id, cell_id, mod_id, cap_mask, cells, nof_cells):
+        """Format a single-event eNB capabilities reply"""
         global _emproto
         return _emproto.epf_single_ecap_rep(buf, size, enb_id, cell_id, mod_id, cap_mask, cells, nof_cells)
     
-    def epp_single_ecap_rep(buf, size, cap_mask, cells, nof_cells):
+    def parse_single_ecap_rep(buf, size, cap_mask, cells, nof_cells):
+        """Parse a single-event eNB capabilities reply"""
         global _emproto
         return _emproto.epp_single_ecap_rep(buf, size, cap_mask, cells, nof_cells)
 
-    def epf_single_ecap_req(buf, size, enb_id, cell_id, mod_id):
+    def format_single_ecap_req(buf, size, enb_id, cell_id, mod_id):
+        """Format a single-event eNB capabilities request"""
         global _emproto
         return _emproto.epf_single_ecap_req(buf, size, enb_id, cell_id, mod_id)
     
-    def epp_single_ecap_req(buf, size):
+    def parse_single_ecap_req(buf, size):
+        """Parse a single-event eNB capabilities request"""
         global _emproto
         return _emproto.epp_single_ecap_req(buf, size)
 
@@ -240,23 +296,28 @@ class Emproto(object):
     # UE report message
     #
 
-    def epf_trigger_uerep_rep_fail(buf, size, enb_id, cell_id, mod_id):
+    def format_trigger_uerep_rep_fail(buf, size, enb_id, cell_id, mod_id):
+        """Format a trigger-event UE report failure reply"""
         global _emproto
         return _emproto.epf_trigger_uerep_rep_fail(buf, size, enb_id, cell_id, mod_id)
     
-    def epf_trigger_uerep_rep(buf, size, cap_mask, cells, nof_ues, ues):
+    def format_trigger_uerep_rep(buf, size, cap_mask, cells, nof_ues, ues):
+        """Format a trigger-event UE report reply"""
         global _emproto
         return _emproto.epf_trigger_uerep_rep(buf, size, cap_mask, nof_ues, ues)
 
-    def epp_trigger_uerep_rep(buf, size, nof_uesm, ues):
+    def parse_trigger_uerep_rep(buf, size, nof_uesm, ues):
+        """Parse a trigger-event UE report reply"""
         global _emproto
         return _emproto.epp_trigger_uerep_rep(buf, size, nof_uesm, ues)
     
-    def epf_trigger_uerep_req(buf, size, enb_id, cell_id, mod_id, op):
+    def format_trigger_uerep_req(buf, size, enb_id, cell_id, mod_id, op):
+        """Format a trigger-event UE report request"""
         global _emproto
         return _emproto.epf_trigger_uerep_req(buf, size, enb_id, cell_id, mod_id, op)
 
-    def epp_trigger_uerep_req(buf, size):
+    def parse_trigger_uerep_req(buf, size):
+        """Parse a trigger-event UE report request"""
         global _emproto
         return _emproto.epf_trigger_uerep_req(buf, size)
 
@@ -264,22 +325,27 @@ class Emproto(object):
     # UE measurements message
     #
 
-    def epf_trigger_uemeas_rep_fail(buf, size, enb_id, cell_id, mod_id):
+    def format_trigger_uemeas_rep_fail(buf, size, enb_id, cell_id, mod_id):
+        """Format a trigger-event UE measurement failure reply"""
         global _emproto
         return _emproto.epf_trigger_uemeas_rep_fail(buf, size, enb_id, cell_id, mod_id)
     
-    def epf_trigger_uemeas_rep(buf, size, cap_mask, cells, nof_ues, ues):
+    def format_trigger_uemeas_rep(buf, size, cap_mask, cells, nof_ues, ues):
+        """Format a trigger-event UE measurement reply"""
         global _emproto
         return _emproto.epf_trigger_uemeas_rep(buf, size, cap_mask, nof_ues, ues)
 
-    def epp_trigger_uemeas_rep(buf, size, nof_uesm, ues):
+    def parse_trigger_uemeas_rep(buf, size, nof_uesm, ues):
+        """Parse a trigger-event UE measurement reply"""
         global _emproto
         return _emproto.epp_trigger_uemeas_rep(buf, size, nof_uesm, ues)
     
-    def epf_trigger_uemeas_req(buf, size, enb_id, cell_id, mod_id, op):
+    def format_trigger_uemeas_req(buf, size, enb_id, cell_id, mod_id, op):
+        """Format a trigger-event UE measurement request"""
         global _emproto
         return _emproto.epf_trigger_uemeas_req(buf, size, enb_id, cell_id, mod_id, op)
 
-    def epp_trigger_uemeas_req(buf, size):
+    def parse_trigger_uemeas_req(buf, size):
+        """Parse a trigger-event UE measurement request"""
         global _emproto
         return _emproto.epf_trigger_uemeas_req(buf, size)

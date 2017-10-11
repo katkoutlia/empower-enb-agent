@@ -37,7 +37,6 @@
 #include <emage.h>
 #include <emlog.h>
 
-#include "config.h"
 #include "agent.h"
 #include "emlist.h"
 #include "net.h"
@@ -45,14 +44,8 @@
 
 #include <emproto.h>
 
-/* Static location of the configuration file. */
-#define EM_CONFIG_FILE			"/etc/empower/agent.conf"
-
 /* For the first run only. */
 int initialized = 0;
-
-/* Configuration of the agent. */
-struct config_profile em_conf = {0};
 
 /* Agents which are actually active. */
 LIST_HEAD(em_agents);
@@ -64,7 +57,8 @@ pthread_spinlock_t em_agents_lock;
  ******************************************************************************/
 
 /* Schedule the send of a message. */
-int add_send_job(struct agent * a, char * msg, unsigned int size) {
+int add_send_job(struct agent * a, char * msg, unsigned int size)
+{
 	char * buf;
 	struct sched_job * s = 0;
 
@@ -106,7 +100,8 @@ int add_send_job(struct agent * a, char * msg, unsigned int size) {
 	return status;
 }
 
-int em_has_trigger(int enb_id, int tid, int ttype) {
+int em_has_trigger(int enb_id, int tid, int ttype)
+{
 	struct agent * a = 0;
 
 	int found = 0;
@@ -126,7 +121,8 @@ int em_has_trigger(int enb_id, int tid, int ttype) {
 	return t ? 1 : 0;
 }
 
-int em_is_connected(int enb_id) {
+int em_is_connected(int enb_id)
+{
 	struct agent * a = 0;
 	int found = 0;
 
@@ -145,67 +141,11 @@ int em_is_connected(int enb_id) {
 	return found;
 }
 
-
-/* Read the configuration file and set the globals properly. Returns a negative
- * error number on error.
- */
-int em_load_config(char * config_path, struct config_profile * config) {
-	char buf[4096];
-	int br = 0;
-
-	char * token = 0;
-
-	int fd = open(EM_CONFIG_FILE, O_RDONLY);
-
-	if(fd < 0) {
-		EMLOG("Failed to load config file %s.", config_path);
-		return -1;
-	}
-
-	br = read(fd, buf, 4096);
-
-	if(br <= 0) {
-		EMLOG("Nothing to be read from the %s config file!",
-			config_path);
-
-		close(fd);
-		return -1;
-	}
-
-	token = strtok(buf, " ");
-
-	if(!token) {
-		EMLOG("Configuration file address is malformed.");
-		close(fd);
-		return -1;
-	}
-
-	strncpy(config->ctrl_ipv4_addr, token, 16);
-	token = strtok(NULL, " ");
-
-	if(!token) {
-		EMLOG("Configuration file port is malformed.");
-		close(fd);
-		return -1;
-	}
-
-	config->ctrl_port = atoi(token);
-
-	close(fd);
-	return 0;
-}
-
-int em_init(void) {
+int em_init(void)
+{
 	if(!initialized) {
 		/* Initialize locking. */
 		pthread_spin_init(&em_agents_lock, 0);
-
-		if(em_load_config(EM_CONFIG_FILE, &em_conf)) {
-			EMLOG("No configuration file...");
-			return -1;
-		}
-
-		EMDBG("Configuration file loaded successfully...");
 
 		/* Don't perform initialization again. */
 		initialized = 1;
@@ -214,7 +154,8 @@ int em_init(void) {
 	return 0;
 }
 
-int em_release_agent(struct agent * a) {
+int em_release_agent(struct agent * a)
+{
 	free(a);
 
 	return 0;
@@ -223,8 +164,8 @@ int em_release_agent(struct agent * a) {
 int em_send(int enb_id, char * msg, unsigned int size) {
 	struct agent * a = 0;
 
-	int found = 0;
-	int status = 0;
+	int found  = 0;
+	int status = -1;
 
 /****** LOCK ******************************************************************/
 	pthread_spin_lock(&em_agents_lock);
@@ -241,7 +182,8 @@ int em_send(int enb_id, char * msg, unsigned int size) {
 	return status;
 }
 
-int em_terminate_agent(int b_id) {
+int em_terminate_agent(int b_id)
+{
 	struct agent * a = 0;
 	struct agent * b = 0;
 
@@ -282,7 +224,12 @@ int em_terminate_agent(int b_id) {
  * Entry/exit points for the Agent.                                           *
  ******************************************************************************/
 
-int em_start(struct em_agent_ops * ops, int b_id) {
+int em_start(
+	int                   b_id,
+	struct em_agent_ops * ops,
+	char *                ctrl_addr,
+	unsigned short        ctrl_port)
+{
 	struct agent * a = 0;
 
 	int status = 0;
@@ -340,8 +287,8 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 
 	EMDBG("New agent for %d created", b_id);
 
-	memcpy(a->net.addr, em_conf.ctrl_ipv4_addr, 16);
-	a->net.port = em_conf.ctrl_port;
+	memcpy(a->net.addr, ctrl_addr, strlen(ctrl_addr));
+	a->net.port = ctrl_port;
 	a->ops = ops;
 
 	a->trig.next = 1;
@@ -400,7 +347,8 @@ int em_start(struct em_agent_ops * ops, int b_id) {
 	return 0;
 }
 
-int em_stop(void) {
+int em_stop(void)
+{
 	struct agent * a = 0;
 
 	while(!list_empty(&em_agents)) {

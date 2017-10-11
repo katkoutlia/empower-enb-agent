@@ -83,7 +83,7 @@ int epp_ecap_req(char * buf, unsigned int size)
  ******************************************************************************/
 
 int epf_single_ecap_rep(
-	char *     buf, unsigned int size,
+	char *        buf, unsigned int size,
 	uint32_t      enb_id,
 	uint16_t      cell_id,
 	uint32_t      mod_id,

@@ -54,7 +54,7 @@ struct trigger * tr_add(
 		t->req = malloc(sizeof(char) * size);
 
 		if(!t->req) {
-			printf("Not enough memory for new trigger!\n");
+			EMLOG("Not enough memory for new trigger!");
 			free(t);
 			return 0;
 		}

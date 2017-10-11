@@ -117,14 +117,15 @@ int em_send(int enb_id, char * msg, unsigned int size);
 
 /* Start the Empower Agent logic. This will cause the agent to start interacting
  * with a remote controller or to local events. You need to pass the technology
- * dependant callbacks and the base station identifier.
- *
- * Information about controller address and characteristics are taken by the
- * configuration file which must be present in your machine.
+ * dependent callbacks and the base station identifier.
  *
  * Returns 0 on success, or a negative error code on failure.
  */
-int em_start(struct em_agent_ops * ops, int enb_id);
+int em_start(
+	int                   b_id,
+	struct em_agent_ops * ops,
+	char *                ctrl_addr,
+	unsigned short        ctrl_port);
 
 /* Stop the Empower Agent logic. This will cause the agent to stop to all the
  * controller commands and local events.

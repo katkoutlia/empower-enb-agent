@@ -106,7 +106,6 @@ int epp_single_hello_req(
 		id);
 }
 
-
 int epf_single_hello_rep(
 	char *   buf, unsigned int size,
 	uint32_t enb_id,
@@ -134,7 +133,6 @@ int epf_single_hello_rep(
 
 	return ms;
 }
-
 
 int epp_single_hello_rep(
 	char *     buf, unsigned int size,

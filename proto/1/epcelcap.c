@@ -16,22 +16,32 @@
 #include <emproto.h>
 
 int epf_ccap_rep(
-	char *        buf, unsigned int size,
+	char *        buf,
+	unsigned int  size,
 	ep_cell_det * cell)
 {
 	ep_ccap_rep * rep = (ep_ccap_rep *)buf;
 
-	rep->cap        = htonl(cell->cap);
-	rep->DL_earfcn  = htons(cell->DL_earfcn);
-	rep->DL_prbs    = cell->DL_prbs;
-	rep->UL_earfcn  = htons(cell->UL_earfcn);
-	rep->UL_prbs    = cell->UL_prbs;
+	if(!cell) {
+		rep->cap        = 0;
+		rep->DL_earfcn  = 0;
+		rep->DL_prbs    = 0;
+		rep->UL_earfcn  = 0;
+		rep->UL_prbs    = 0;
+	} else {
+		rep->cap        = htonl(cell->cap);
+		rep->DL_earfcn  = htons(cell->DL_earfcn);
+		rep->DL_prbs    = cell->DL_prbs;
+		rep->UL_earfcn  = htons(cell->UL_earfcn);
+		rep->UL_prbs    = cell->UL_prbs;
+	}
 
 	return sizeof(ep_ccap_rep);
 }
 
 int epp_ccap_rep(
-	char *        buf, unsigned int size,
+	char *        buf,
+	unsigned int  size,
 	ep_cell_det * cell)
 {
 	ep_ccap_rep * rep = (ep_ccap_rep *)buf;
@@ -63,8 +73,38 @@ int epp_ccap_req(char * buf, unsigned int size)
  * Public API                                                                 *
  ******************************************************************************/
 
+int epf_single_ccap_rep_fail(
+	char *        buf,
+	unsigned int  size,
+	uint32_t      enb_id,
+	uint16_t      cell_id,
+	uint32_t      mod_id)
+{
+	int ms = 0;
+
+	ms += epf_head(
+		buf,
+		size,
+		EP_TYPE_SINGLE_MSG,
+		enb_id,
+		cell_id,
+		mod_id);
+
+	ms += epf_single(
+		buf + ms,
+		size - ms,
+		EP_ACT_CCAP,
+		EP_OPERATION_FAIL,
+		EP_DIR_REPLY);
+
+	ms += epf_ccap_rep(buf + ms, size - ms, 0);
+
+	return ms;
+}
+
 int epf_single_ccap_rep(
-	char *        buf, unsigned int size,
+	char *        buf,
+	unsigned int  size,
 	uint32_t      enb_id,
 	uint16_t      cell_id,
 	uint32_t      mod_id,

@@ -60,11 +60,22 @@ typedef struct __ep_enb_capabilities_request {
  * Operation on single-event messages                                         *
  ******************************************************************************/
 
+/* Format an eNB capabilities negative reply.
+ * Returns the size of the message, or a negative error number.
+ */
+int epf_single_ecap_rep_fail(
+	char *        buf,
+	unsigned int  size,
+	uint32_t      enb_id,
+	uint16_t      cell_id,
+	uint32_t      mod_id);
+
 /* Format an eNB capabilities reply.
  * Returns the size of the message, or a negative error number.
  */
 int epf_single_ecap_rep(
-	char * buf, unsigned int size,
+	char *        buf,
+	unsigned int  size,
 	uint32_t      enb_id,
 	uint16_t      cell_id,
 	uint32_t      mod_id,
@@ -74,7 +85,8 @@ int epf_single_ecap_rep(
 
 /* Parse an eNB capabilities reply looking for the desired fields */
 int epp_single_ecap_rep(
-	char * buf, unsigned int size,
+	char *        buf,
+	unsigned int  size,
 	uint32_t *    cap_mask,
 	ep_cell_det * cells,
 	uint32_t *    nof_cells);
@@ -83,10 +95,11 @@ int epp_single_ecap_rep(
  * Returns the size of the message, or a negative error number.
  */
 int epf_single_ecap_req(
-	char * buf, unsigned int size,
-	uint32_t enb_id,
-	uint16_t cell_id,
-	uint32_t mod_id);
+	char *       buf,
+	unsigned int size,
+	uint32_t     enb_id,
+	uint16_t     cell_id,
+	uint32_t     mod_id);
 
 /* Parse an eNB capabilities request for the desired fields */
 int epp_single_ecap_req(char * buf, unsigned int size);

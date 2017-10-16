@@ -90,11 +90,75 @@ int sched_perform_send(struct agent * a, struct sched_job * job)
 	return sched_send_msg(a, job->args, job->size);
 }
 
+int sched_perform_cell_setup(struct agent * a, struct sched_job * job)
+{
+	uint16_t pci = 0;
+	uint32_t mod = 0;
+
+	if(epp_head((char *)job->args, job->size, 0, 0, &pci, &mod)) {
+		EMLOG("Cannot parse cell id in Cell setup");
+		return 0;
+	}
+
+	if(a->ops && a->ops->cell_setup_request) {
+		a->ops->cell_setup_request(mod, pci);
+	}
+
+	return JOB_CONSUMED;
+}
 
 int sched_perform_enb_setup(struct agent * a, struct sched_job * job)
 {
+	uint32_t mod = 0;
+
+	if(epp_head((char *)job->args, job->size, 0, 0, 0, &mod)) {
+		EMLOG("Cannot parse cell id in Cell setup");
+		return 0;
+	}
+
 	if(a->ops && a->ops->enb_setup_request) {
-		a->ops->enb_setup_request();
+		a->ops->enb_setup_request(mod);
+	}
+
+	return JOB_CONSUMED;
+}
+
+int sched_perform_ue_measure(struct agent * a, struct sched_job * job)
+{
+	struct trigger * t   = (struct trigger *)job->args;
+
+	uint8_t          mid   = 0;
+	uint16_t         rnti  = 0;
+	uint16_t         freq  = 0;
+	uint16_t         intv  = 0;
+	uint16_t         max_c = 0;
+	uint16_t         max_m = 0;
+
+	if(a->ops && a->ops->ue_measure) {
+		/* Find the real trigger; the given one just an empty copy... */
+		t = tr_find(&a->trig, t->id);
+
+		if(t) {
+			epp_trigger_uemeas_req(
+				t->req,
+				t->size,
+				&mid,
+				&rnti,
+				&freq,
+				&intv,
+				&max_c,
+				&max_m);
+
+			a->ops->ue_measure(
+				t->mod,
+				t->id,
+				mid,
+				rnti,
+				freq,
+				intv,
+				max_c,
+				max_m);
+		}
 	}
 
 	return JOB_CONSUMED;
@@ -103,16 +167,10 @@ int sched_perform_enb_setup(struct agent * a, struct sched_job * job)
 int sched_perform_ue_report(struct agent * a, struct sched_job * job)
 {
 	uint32_t         mod = 0;
-	struct trigger * t   = 0;
+	struct trigger * t   = (struct trigger *)job->args;
 
 	if(a->ops && a->ops->ue_report) {
-		epp_head((char *)job->args, job->size, 0, 0, 0, &mod);
-
-		t = tr_has_trigger(&a->trig, mod, EM_TRIGGER_UE_REPORT);
-
-		if(t) {
-			a->ops->ue_report(mod, t->id, t->type);
-		}
+		a->ops->ue_report(t->mod, t->id);
 	}
 
 	return JOB_CONSUMED;
@@ -135,11 +193,9 @@ int sched_release_job(struct sched_job * job)
 {
 	EMDBG("Releasing a %d job", job->type);
 
-	if(job->args) {
-		if(job->args) {
-			free(job->args);
-			job->args = 0;
-		}
+	if(job->args && job->size > 0) {
+		free(job->args);
+		job->args = 0;
 	}
 
 	free(job);
@@ -155,7 +211,6 @@ int sched_add_job(struct sched_job * job, struct sched_context * sched) {
 
 	clock_gettime(CLOCK_REALTIME, &job->issued);
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&sched->lock);
 
 	/* Perform the job if the context is not stopped. */
@@ -166,7 +221,6 @@ int sched_add_job(struct sched_job * job, struct sched_context * sched) {
 	}
 
 	pthread_spin_unlock(&sched->lock);
-/****** UNLOCK ****************************************************************/
 
 	EMDBG("Scheduled a %d job for %d msec", job->type, job->elapse);
 
@@ -184,7 +238,7 @@ int sched_perform_job(
 		return JOB_NOT_ELAPSED;
 	}
 
-	EMDBG(" **************** Performing a job %d", job->type);
+	EMDBG("\nPerforming a job %d", job->type);
 
 	switch(job->type) {
 	case JOB_TYPE_SEND:
@@ -196,8 +250,14 @@ int sched_perform_job(
 	case JOB_TYPE_ENB_SETUP:
 		status = sched_perform_enb_setup(a, job);
 		break;
+	case JOB_TYPE_CELL_SETUP:
+		status = sched_perform_cell_setup(a, job);
+		break;
 	case JOB_TYPE_UE_REPORT:
 		status = sched_perform_ue_report(a, job);
+		break;
+	case JOB_TYPE_UE_MEASURE:
+		status = sched_perform_ue_measure(a, job);
 		break;
 	default:
 		EMDBG("Unknown job cannot be performed, type=%d", job->type);
@@ -223,7 +283,6 @@ int sched_consume(struct sched_context * sched) {
 	int ne = 0;	/* Network error. */
 
 	while(nj) {
-/****** LOCK ******************************************************************/
 		pthread_spin_lock(&sched->lock);
 
 		/* Nothing to to? Go to sleep. */
@@ -241,7 +300,6 @@ int sched_consume(struct sched_context * sched) {
 		}
 
 		pthread_spin_unlock(&sched->lock);
-/****** UNLOCK ****************************************************************/
 
 		/* Nothing to do... out! */
 		if(!nj) {
@@ -252,7 +310,6 @@ int sched_consume(struct sched_context * sched) {
 
 		op = sched_perform_job(a, job, &now);
 
-/****** LOCK ******************************************************************/
 		pthread_spin_lock(&sched->lock);
 
 		/* Possible outcomes. */
@@ -294,7 +351,6 @@ int sched_consume(struct sched_context * sched) {
 			}
 
 			pthread_spin_unlock(&sched->lock);
-/****** UNLOCK ****************************************************************/
 
 			tr_flush(&a->trig);
 
@@ -309,13 +365,12 @@ int sched_consume(struct sched_context * sched) {
 		}
 
 		pthread_spin_unlock(&sched->lock);
-/****** UNLOCK ****************************************************************/
 	}
 
 	/* All the jobs marked as to process again are moved to the official
 	 * job queue.
 	 */
-/****** LOCK ******************************************************************/
+
 	/* Dump all the rescheduled jobs in the queue again. */
 	pthread_spin_lock(&sched->lock);
 	list_for_each_entry_safe(job, tmp, &sched->todo, next) {
@@ -323,7 +378,6 @@ int sched_consume(struct sched_context * sched) {
 		list_add(&job->next, &sched->jobs);
 	}
 	pthread_spin_unlock(&sched->lock);
-/****** UNLOCK ****************************************************************/
 
 	return 0;
 }
@@ -335,7 +389,6 @@ int sched_remove_job(unsigned int id, int type, struct sched_context * sched) {
 	struct sched_job * tmp = 0;
 
 	/* Dump the job from wherever it could be listed. */
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&sched->lock);
 	list_for_each_entry_safe(job, tmp, &sched->jobs, next) {
 		if(job->id == id && job->type == type) {
@@ -363,7 +416,6 @@ int sched_remove_job(unsigned int id, int type, struct sched_context * sched) {
 		}
 	}
 	pthread_spin_unlock(&sched->lock);
-/****** UNLOCK ****************************************************************/
 
 	if(!found) {
 		EMDBG("Job %d NOT found!", job->id);
@@ -408,7 +460,6 @@ void * sched_loop(void * args) {
 		nanosleep(&wt, &td);
 	}
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&s->lock);
 	/* Dump job to process again. */
 	list_for_each_entry_safe(job, tmp, &s->todo, next) {
@@ -422,7 +473,6 @@ void * sched_loop(void * args) {
 		sched_release_job(job);
 	}
 	pthread_spin_unlock(&s->lock);
-/****** UNLOCK ****************************************************************/
 
 	/*
 	 * If execution arrives here, then a stop has been issued.
@@ -451,8 +501,8 @@ int sched_start(struct sched_context * sched) {
 int sched_stop(struct sched_context * sched) {
 	/* Stop and wait for it... */
 	sched->stop = 1;
-	pthread_join(sched->thread, 0);
 
+	pthread_join(sched->thread, 0);
 	pthread_spin_destroy(&sched->lock);
 
 	return 0;

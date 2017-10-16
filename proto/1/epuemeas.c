@@ -16,23 +16,23 @@
 #include <emproto.h>
 
 int epf_uemeas_rep(
-	char * buf, unsigned int size,
-	uint32_t        nof_ues,
+	char *          buf,
+	unsigned int    size,
+	uint32_t        nof_meas,
+	uint32_t        max,
 	ep_ue_measure * ues)
 {
-	int i = -1; /* On ('ues' = 0) returns (x + (y * (0)))*/
+	int i = -1;
 
 	ep_uemeas_rep * rep = (ep_uemeas_rep *) buf;
 	ep_uemeas_det * det = (ep_uemeas_det *)(buf + sizeof(ep_uemeas_rep));
 
-	rep->nof_ues = htonl(nof_ues);
+	rep->nof_meas = htonl(nof_meas);
 
 	if(ues) {
-		for(i = 0; i < nof_ues && i < EP_UE_REPORT_MAX_UES; i++) {
+		for(i = 0; i < nof_meas && i < max; i++) {
 			det[i].meas_id = ues[i].meas_id;
-			det[i].rnti    = htons(ues[i].rnti);
 			det[i].pci     = htons(ues[i].pci);
-			det[i].earfcn  = htons(ues[i].earfcn);
 			det[i].rsrp    = htons(ues[i].rsrp);
 			det[i].rsrq    = htons(ues[i].rsrq);
 		}
@@ -42,8 +42,10 @@ int epf_uemeas_rep(
 }
 
 int epp_uemeas_rep(
-	char * buf, unsigned int size,
-	uint32_t *      nof_ues,
+	char *          buf,
+	unsigned int    size,
+	uint32_t *      nof_meas,
+	uint32_t        max,
 	ep_ue_measure * ues)
 {
 	int i;
@@ -51,14 +53,12 @@ int epp_uemeas_rep(
 	ep_uemeas_rep * rep = (ep_uemeas_rep *) buf;
 	ep_uemeas_det * det = (ep_uemeas_det *)(buf + sizeof(ep_uemeas_rep));
 
-	*nof_ues = ntohl(rep->nof_ues);
+	*nof_meas = ntohl(rep->nof_meas);
 
 	if(ues) {
-		for(i = 0; i < *nof_ues && i < EP_UE_REPORT_MAX_UES; i++) {
+		for(i = 0; i < *nof_meas && i < max; i++) {
 			ues[i].meas_id = det[i].meas_id;
-			ues[i].rnti    = ntohs(det[i].rnti);
 			ues[i].pci     = ntohs(det[i].pci);
-			ues[i].earfcn  = ntohs(det[i].earfcn);
 			ues[i].rsrp    = ntohs(det[i].rsrp);
 			ues[i].rsrq    = ntohs(det[i].rsrq);
 		}
@@ -68,17 +68,23 @@ int epp_uemeas_rep(
 }
 
 int epf_uemeas_req(
-	char * buf,
-	unsigned int size,
-	uint8_t  meas_id,
-	uint16_t pci,
-	uint16_t earfcn)
+	char *        buf,
+	unsigned int  size,
+	uint8_t       meas_id,
+	uint16_t      rnti,
+	uint16_t      earfcn,
+	uint16_t      interval,
+	int16_t       max_cells,
+	int16_t       max_meas)
 {
 	ep_uemeas_req * req = (ep_uemeas_req *)buf;
 
-	req->meas_id = meas_id;
-	req->pci     = htons(pci);
-	req->earfcn  = htons(earfcn);
+	req->meas_id   = meas_id;
+	req->rnti      = htons(rnti);
+	req->earfcn    = htons(earfcn);
+	req->interval  = htons(interval);
+	req->max_cells = htons(max_cells);
+	req->max_meas  = htons(max_meas);
 
 	return sizeof(ep_uemeas_req);
 }
@@ -86,8 +92,11 @@ int epf_uemeas_req(
 int epp_uemeas_req(
 	char * buf, unsigned int size,
 	uint8_t  * meas_id,
-	uint16_t * pci,
-	uint16_t * earfcn)
+	uint16_t * rnti,
+	uint16_t * earfcn,
+	uint16_t * interval,
+	int16_t  * max_cells,
+	int16_t  * max_meas)
 {
 	ep_uemeas_req * req = (ep_uemeas_req *) buf;
 
@@ -95,12 +104,24 @@ int epp_uemeas_req(
 		*meas_id = ntohs(req->meas_id);
 	}
 
-	if(pci) {
-		*pci = ntohs(req->pci);
+	if(rnti) {
+		*rnti = ntohs(req->rnti);
 	}
 
 	if(earfcn) {
 		*earfcn = ntohs(req->earfcn);
+	}
+
+	if(interval) {
+		*interval = ntohs(req->interval);
+	}
+
+	if(max_cells) {
+		*max_cells = ntohs(req->max_cells);
+	}
+
+	if(max_meas) {
+		*max_meas = ntohs(req->max_meas);
 	}
 
 	return EP_SUCCESS;
@@ -111,7 +132,8 @@ int epp_uemeas_req(
  ******************************************************************************/
 
 int epf_trigger_uemeas_rep_fail(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t        enb_id,
 	uint16_t        cell_id,
 	uint32_t        mod_id)
@@ -133,17 +155,19 @@ int epf_trigger_uemeas_rep_fail(
 		EP_OPERATION_FAIL,
 		EP_DIR_REPLY);
 
-	ms += epf_uemeas_rep(buf + ms, size - ms, 0, 0);
+	ms += epf_uemeas_rep(buf + ms, size - ms, 0, 0, 0);
 
 	return ms;
 }
 
 int epf_trigger_uemeas_rep(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t        enb_id,
 	uint16_t        cell_id,
 	uint32_t        mod_id,
-	uint32_t        nof_ues,
+	uint32_t        nof_meas,
+	uint32_t        max,
 	ep_ue_measure * ues)
 {
 	int ms = 0;
@@ -163,32 +187,39 @@ int epf_trigger_uemeas_rep(
 		EP_OPERATION_SUCCESS,
 		EP_DIR_REPLY);
 
-	ms += epf_uemeas_rep(buf + ms, size - ms, nof_ues, ues);
+	ms += epf_uemeas_rep(buf + ms, size - ms, nof_meas, max, ues);
 
 	return ms;
 }
 
 int epp_trigger_uemeas_rep(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t *      nof_ues,
+	uint32_t        max,
 	ep_ue_measure * ues)
 {
 	return epp_uemeas_rep(
 		buf + sizeof(ep_hdr) + sizeof(ep_t_hdr),
 		size,
 		nof_ues,
+		max,
 		ues);
 }
 
 int epf_trigger_uemeas_req(
-	char * buf, unsigned int size,
-	uint32_t   enb_id,
-	uint16_t   cell_id,
-	uint32_t   mod_id,
-	ep_op_type op,
-	uint8_t    meas_id,
-	uint16_t   pci,
-	uint16_t   earfcn)
+	char *        buf,
+	unsigned int  size,
+	uint32_t      enb_id,
+	uint16_t      cell_id,
+	uint32_t      mod_id,
+	ep_op_type    op,
+	uint8_t       meas_id,
+	uint16_t      rnti,
+	uint16_t      earfcn,
+	uint16_t      interval,
+	int16_t       max_cells,
+	int16_t       max_meas)
 {
 	int ms = 0;
 
@@ -207,16 +238,36 @@ int epf_trigger_uemeas_req(
 		op,
 		EP_DIR_REQUEST);
 
-	ms += epf_uemeas_req(buf + ms, size - ms, meas_id, pci, earfcn);
+	ms += epf_uemeas_req(
+		buf + ms,
+		size - ms,
+		meas_id,
+		rnti,
+		earfcn,
+		interval,
+		max_cells,
+		max_meas);
 
 	return ms;
 }
 
 int epp_trigger_uemeas_req(
-	char * buf, unsigned int size,
-	uint8_t  * meas_id,
-	uint16_t * pci,
-	uint16_t * earfcn)
+	char *       buf,
+	unsigned int size,
+	uint8_t  *   meas_id,
+	uint16_t *   rnti,
+	uint16_t *   earfcn,
+	uint16_t *   interval,
+	int16_t  *   max_cells,
+	int16_t  *   max_meas)
 {
-	return epp_uemeas_req(buf, size, meas_id, pci, earfcn);
+	return epp_uemeas_req(
+		buf,
+		size,
+		meas_id,
+		rnti,
+		earfcn,
+		interval,
+		max_cells,
+		max_meas);
 }

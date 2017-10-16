@@ -114,11 +114,9 @@ int net_connected(struct net_context * net) {
 unsigned int net_next_seq(struct net_context * net) {
 	int ret = 0;
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&net->lock);
 	ret = net->seq++;
 	pthread_spin_unlock(&net->lock);
-/****** UNLOCK ****************************************************************/
 
 	return ret;
 }
@@ -267,7 +265,7 @@ int net_sched_job(
 
 	memset(job, 0, sizeof(struct sched_job));
 
-	if(args) {
+	if(size > 0) {
 		job->args = malloc(sizeof(char) * size);
 
 		if(!job->args) {
@@ -277,6 +275,8 @@ int net_sched_job(
 		}
 
 		memcpy(job->args, args, sizeof(char) * size);
+	} else {
+		job->args = args;
 	}
 
 	INIT_LIST_HEAD(&job->next);
@@ -315,6 +315,40 @@ int net_se_enb_setup(struct net_context * net, char * msg, int size)
 	return net_sched_job(a, seq, JOB_TYPE_ENB_SETUP, 1, 0, msg, size);
 }
 
+int net_te_ue_measure(struct net_context * net, char * msg, int size)
+{
+	uint32_t         mod;
+	uint32_t         seq;
+	uint32_t         op;
+	uint8_t          m_id = 0;
+
+	struct trigger * t;
+	struct agent *   a = container_of(net, struct agent, net);
+
+	epp_head(msg, size, 0, 0, 0, &mod);
+
+	seq = epp_seq(msg, size);
+	op  = epp_trigger_op(msg, size);
+
+	epp_trigger_uemeas_req(msg, size, &m_id, 0, 0, 0, 0, 0);
+
+	if(op == EP_OPERATION_ADD) {
+		t = tr_add(
+			&a->trig,
+			tr_next_id(&a->trig),
+			mod,
+			TR_TYPE_UE_MEAS,
+			(int)m_id,
+			msg,
+			size);
+	} else {
+		return tr_del(&a->trig, mod, TR_TYPE_UE_MEAS, (int)m_id);
+	}
+
+	return net_sched_job(
+		a, seq, JOB_TYPE_UE_MEASURE, 1, 0, t, sizeof(struct trigger));
+}
+
 int net_te_ue_report(struct net_context * net, char * msg, int size)
 {
 	uint32_t         mod;
@@ -330,13 +364,20 @@ int net_te_ue_report(struct net_context * net, char * msg, int size)
 	op  = epp_trigger_op(msg, size);
 
 	if(op == EP_OPERATION_ADD) {
-		t = tr_add(&a->trig, mod, EM_TRIGGER_UE_REPORT, 0, 0);
-
+		t = tr_add(
+			&a->trig,
+			tr_next_id(&a->trig),
+			mod,
+			TR_TYPE_UE_REP,
+			0,
+			msg,
+			size);
 	} else {
-		return tr_del(&a->trig, mod, EM_TRIGGER_UE_REPORT);
+		return tr_del(&a->trig, mod, TR_TYPE_UE_REP, 0);
 	}
 
-	return net_sched_job(a, seq, JOB_TYPE_UE_REPORT, 1, 0, msg, size);
+	return net_sched_job(
+		a, seq, JOB_TYPE_UE_REPORT, 1, 0, t, sizeof(struct trigger));
 }
 
 /******************************************************************************
@@ -385,6 +426,12 @@ int net_process_single_event(
 			return net_se_enb_setup(net, msg, size);
 		}
 		break;
+	case EP_ACT_CCAP:
+		if(epp_single_dir(msg, size) == EP_DIR_REQUEST) {
+			EMDBG("Cell capabilities request received!");
+			return net_se_cell_setup(net, msg, size);
+		}
+		break;
 	default:
 		EMDBG("Unknown single event, type=%d", s);
 		break;
@@ -409,6 +456,8 @@ int net_process_trigger_event(
 		break;
 	case EP_ACT_UE_REPORT:
 		return net_te_ue_report(net, msg, size);
+	case EP_ACT_UE_MEASURE:
+		return net_te_ue_measure(net, msg, size);
 	default:
 		EMDBG("Unknown trigger event, type=%d", t);
 		break;
@@ -474,9 +523,13 @@ void * net_loop(void * args)
 	wc.tv_sec  = 1 + wt.tv_sec;
 	wc.tv_nsec = wt.tv_nsec;
 
-	while(!net->stop) {
+	while(1) {
 next:
 		if(net->status == EM_STATUS_NOT_CONNECTED) {
+			if(net->stop) {
+				goto stop;
+			}
+
 			if(net_connect_to_controller(net) == 0) {
 				net_connected(net);
 			}
@@ -490,6 +543,10 @@ next:
 
 		/* Continue until EP_PROLOGUE_SIZE bytes have been collected */
 		while(bread < EP_PROLOGUE_SIZE) {
+			if(net->stop) {
+				goto stop;
+			}
+
 			op = net_recv(
 				net, buf + bread, EP_PROLOGUE_SIZE - bread);
 
@@ -516,6 +573,10 @@ next:
 
 		/* Continue until the entire message has been collected */
 		while(bread < mlen) {
+			if(net->stop) {
+				goto stop;
+			}
+
 			op = net_recv(net, buf + bread, mlen - bread);
 
 			if(op <= 0) {
@@ -536,6 +597,7 @@ next:
 		net_process_message(net, buf, bread);
 	}
 
+stop:
 	EMDBG("Listening loop is terminating...");
 
 	/*

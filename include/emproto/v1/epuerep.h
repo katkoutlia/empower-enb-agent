@@ -30,8 +30,6 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-#define EP_UE_REPORT_MAX_UES    64
-
 /*
  * UE report messages
  */
@@ -45,10 +43,10 @@ typedef struct __ep_ue_report_details {
 
 /* Structure of ep_uerep_rep:
  *      At the end of the UE report reply message there will be listed the
- *      details of the UEs up to EP_UE_REPORT_MAX_UES.
+ *      details of the UEs up to max_ues.
  *
  *      || nof_ues | UE0 | UE1| ..... | UE[nof_ues - 1] ||
- *      Where: 0 <= nof_ues <= EP_UE_REPORT_MAX_UES
+ *      Where: 0 <= nof_ues <= max_ues
  */
 typedef struct __ep_ue_report_reply {
 	uint32_t nof_ues; /* Number of UEs listed  */
@@ -89,7 +87,8 @@ typedef struct __ep_ue_details {
  * Returns the size of the message, or a negative error number.
  */
 int epf_trigger_uerep_rep_fail(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t        enb_id,
 	uint16_t        cell_id,
 	uint32_t        mod_id);
@@ -98,28 +97,33 @@ int epf_trigger_uerep_rep_fail(
  * Returns the size of the message, or a negative error number.
  */
 int epf_trigger_uerep_rep(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t        enb_id,
 	uint16_t        cell_id,
 	uint32_t        mod_id,
 	uint32_t        nof_ues,
+	uint32_t        max_ues,
 	ep_ue_details * ues);
 
 /* Parse an UE report reply looking for the desired fields */
 int epp_trigger_uerep_rep(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t *      nof_ues,
+	uint32_t        max_ues,
 	ep_ue_details * ues);
 
 /* Format an UE report request.
  * Returns the size of the message, or a negative error number.
  */
 int epf_trigger_uerep_req(
-	char * buf, unsigned int size,
-	uint32_t   enb_id,
-	uint16_t   cell_id,
-	uint32_t   mod_id,
-	ep_op_type op);
+	char *       buf,
+	unsigned int size,
+	uint32_t     enb_id,
+	uint16_t     cell_id,
+	uint32_t     mod_id,
+	ep_op_type   op);
 
 /* Parse an UE report request for the desired fields */
 int epp_trigger_uerep_req(char * buf, unsigned int size);

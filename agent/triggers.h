@@ -22,6 +22,12 @@
 
 #include "emlist.h"
 
+/* Possible type of triggers which can be created */
+enum trigger_type {
+	TR_TYPE_UE_REP,   /* UE report */
+	TR_TYPE_UE_MEAS   /* UE measurement */
+};
+
 /* Definition for a single trigger. */
 struct trigger {
 	/* Member of a list. */
@@ -29,8 +35,14 @@ struct trigger {
 
 	/* Id of this trigger. */
 	int id;
-	/* Type of this trigger. */
+	/* Type of trigger */
 	int type;
+	/* Module bound with this trigger. */
+	int mod;
+	/* Id bound to the instance for this trigger; this is useful to
+	 * distinguish between IDs of the same module.
+	 */
+	int instance;
 
 	/* Original request message. */
 	char * req;
@@ -51,21 +63,20 @@ struct tr_context {
 };
 
 /* Add a new trigger in the agent triggering context.
+ *
  * By adding a trigger you make it valid, since disabled triggers are just
  * removed from the list.
  */
 struct trigger * tr_add(
 	struct tr_context * tc,
-	int id,
-	int type,
-	char * req,
-	unsigned char size);
+	int id, int mod, int typ, int instance,
+	char * req, unsigned char size);
 
 /* Find, remove and free a trigger */
-int tr_del(struct tr_context * tc, int id, int type);
+int tr_del(struct tr_context * tc, int mod, int type, int instance);
 
 /* Find an existing trigger */
-struct trigger * tr_find(struct tr_context * tc, int id, int type);
+struct trigger * tr_find(struct tr_context * tc, int id);
 
 /* Flush everything and clean the context. */
 int tr_flush(struct tr_context * tc);
@@ -74,12 +85,13 @@ int tr_flush(struct tr_context * tc);
 void tr_free(struct trigger * tc);
 
 /* Peek the context to see if it has a specific trigger. */
-struct trigger * tr_has_trigger(struct tr_context * tc, int id, int type);
+struct trigger * tr_has_trigger(struct tr_context * tc, int id);
+
+/* Peek the context to see if it has trigger with specific keys. */
+struct trigger * tr_has_trigger_ext(
+	struct tr_context * tc, int mod, int type, int instance);
 
 /* Acquires the next usable trigger id */
 int tr_next_id(struct tr_context * tc);
-
-/* Removes a trigger from the agent triggering context. */
-int tr_rem(struct tr_context * tc, int id, int type);
 
 #endif

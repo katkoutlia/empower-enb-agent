@@ -29,12 +29,10 @@
 
 struct trigger * tr_add(
 	struct tr_context * tc,
-	int id,
-	int type,
-	char * req,
-	unsigned char size)
+	int id, int mod, int type, int instance,
+	char * req, unsigned char size)
 {
-	struct trigger * t = tr_has_trigger(tc, id, type);
+	struct trigger * t = tr_has_trigger_ext(tc, mod, type, instance);
 
 	if(t) {
 		EMDBG("Trigger %d already exists", type);
@@ -64,8 +62,10 @@ struct trigger * tr_add(
 	}
 
 	INIT_LIST_HEAD(&t->next);
-	t->id   = id;
-	t->type = type;
+	t->id       = id;
+	t->mod      = mod;
+	t->type     = type;
+	t->instance = instance;
 
 	pthread_spin_lock(&tc->lock);
 	list_add(&t->next, &tc->ts);
@@ -76,7 +76,7 @@ struct trigger * tr_add(
 	return t;
 }
 
-int tr_del(struct tr_context * tc, int id, int type)
+int tr_del(struct tr_context * tc, int mod, int type, int instance)
 {
 	struct trigger * t = 0;
 	struct trigger * u = 0;
@@ -84,9 +84,16 @@ int tr_del(struct tr_context * tc, int id, int type)
 
 	pthread_spin_lock(&tc->lock);
 	list_for_each_entry_safe(t, u, &tc->ts, next) {
-		if(t->type == type && t->id == id) {
+		if(t->type == type &&
+			t->mod == mod &&
+			t->instance == instance) {
+
 			list_del(&t->next);
 			pthread_spin_unlock(&tc->lock);
+
+			if(t->req) {
+				free(t->req);
+			}
 
 			tr_free(t);
 			return 0;
@@ -97,17 +104,14 @@ int tr_del(struct tr_context * tc, int id, int type)
 	return -1;
 }
 
-struct trigger * tr_find(
-	struct tr_context * tc,
-	int id,
-	int type)
+struct trigger * tr_find(struct tr_context * tc, int id)
 {
 	struct trigger * t = 0;
 	int found = 0;
 
 	pthread_spin_lock(&tc->lock);
 	list_for_each_entry(t, &tc->ts, next) {
-		if(t->type == type && t->id == id) {
+		if(t->id == id) {
 			pthread_spin_unlock(&tc->lock);
 			return t;
 		}
@@ -117,14 +121,39 @@ struct trigger * tr_find(
 	return 0;
 }
 
-struct trigger * tr_has_trigger(struct tr_context * tc, int id, int type)
+struct trigger * tr_has_trigger(struct tr_context * tc, int id)
 {
 	struct trigger * t = 0;
 	int found = 0;
 
 	pthread_spin_lock(&tc->lock);
 	list_for_each_entry(t, &tc->ts, next) {
-		if(t->type == type && t->id == id) {
+		if(t->id == id) {
+			found = 1;
+			break;
+		}
+	}
+	pthread_spin_unlock(&tc->lock);
+
+	if(!found) {
+		return 0;
+	}
+
+	return t;
+}
+
+struct trigger * tr_has_trigger_ext(
+	struct tr_context * tc, int mod, int type, int instance)
+{
+	struct trigger * t = 0;
+	int found = 0;
+
+	pthread_spin_lock(&tc->lock);
+	list_for_each_entry(t, &tc->ts, next) {
+		if(t->mod == mod &&
+			t->type == type &&
+			t->instance == instance) {
+
 			found = 1;
 			break;
 		}
@@ -184,7 +213,7 @@ int tr_rem(struct tr_context * tc, int id, int type)
 
 	pthread_spin_lock(&tc->lock);
 	list_for_each_entry_safe(t, u, &tc->ts, next) {
-		if(t->id == id && t->type == type) {
+		if(t->id == id) {
 			EMDBG("Removing trigger %d", t->id);
 
 			list_del(&t->next);

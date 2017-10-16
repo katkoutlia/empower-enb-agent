@@ -82,8 +82,38 @@ int epp_ecap_req(char * buf, unsigned int size)
  * Public API                                                                 *
  ******************************************************************************/
 
+int epf_single_ecap_rep_fail(
+	char *        buf,
+	unsigned int  size,
+	uint32_t      enb_id,
+	uint16_t      cell_id,
+	uint32_t      mod_id)
+{
+	int ms = 0;
+
+	ms += epf_head(
+		buf,
+		size,
+		EP_TYPE_SINGLE_MSG,
+		enb_id,
+		cell_id,
+		mod_id);
+
+	ms += epf_single(
+		buf + ms,
+		size - ms,
+		EP_ACT_ECAP,
+		EP_OPERATION_FAIL,
+		EP_DIR_REPLY);
+
+	ms += epf_ecap_rep(buf + ms, size - ms, 0, 0, 0);
+
+	return ms;
+}
+
 int epf_single_ecap_rep(
-	char *        buf, unsigned int size,
+	char *        buf,
+	unsigned int  size,
 	uint32_t      enb_id,
 	uint16_t      cell_id,
 	uint32_t      mod_id,
@@ -114,7 +144,8 @@ int epf_single_ecap_rep(
 }
 
 int epp_single_ecap_rep(
-	char * buf, unsigned int size,
+	char *        buf,
+	unsigned int  size,
 	uint32_t *    cap_mask,
 	ep_cell_det * cells,
 	uint32_t *    nof_cells)
@@ -128,10 +159,11 @@ int epp_single_ecap_rep(
 }
 
 int epf_single_ecap_req(
-	char * buf, unsigned int size,
-	uint32_t enb_id,
-	uint16_t cell_id,
-	uint32_t mod_id)
+	char *       buf,
+	unsigned int size,
+	uint32_t     enb_id,
+	uint16_t     cell_id,
+	uint32_t     mod_id)
 {
 	int ms = 0;
 

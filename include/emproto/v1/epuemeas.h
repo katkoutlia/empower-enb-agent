@@ -30,8 +30,6 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-#define EP_UE_MEASUREMENT_MAX_UES    64
-
 /*
  * UE measurements messages
  */
@@ -43,32 +41,35 @@ extern "C"
 
 typedef struct __ep_ue_measurements_details {
 	uint8_t  meas_id; /* Id assigned for this measurement */
-	uint16_t rnti;    /* Radio Network Temporary Identifier */
-	int16_t  pci;     /* Physical Cell Id for the measure */
-	int16_t  earfcn;  /* Frequency of the Reference Signal */
+	int16_t  pci;     /* Physical Cell Id measured */
 	int16_t  rsrp;    /* Reference Signal Received Power */
 	int16_t  rsrq;    /* Reference Signal Received Quality */
 }__attribute__((packed)) ep_uemeas_det;
 
 /* Structure of ep_uemeas_rep:
  *      At the end of the UE measure reply message there will be listed the
- *      details of the UEs up to EP_UE_REPORT_MAX_UES.
+ *      details of the UEs up to 'max_meas' specified in the request.
  *
- *      || nof_ues | UE0 | UE1| ..... | UE[nof_ues - 1] ||
- *      Where: 0 <= nof_ues <= EP_UE_MEASUREMENT_MAX_UES
+ *      || nof_meas | meas 0 | meas 1 | ..... | meas [nof_meas - 1] ||
+ *      Where: 1 <= nof_meas <= max_meas
  */
 typedef struct __ep_ue_measurement_reply {
-	uint32_t nof_ues; /* Number of UEs listed  */
-	/*
-	 * Here at the end of the message there will be listed the UEs
-	 * measurements
-	 */
+	uint32_t nof_meas; /* Number of measurements listed  */
+	/* Multiple ep_uemeas_det listed here at the end */
 }__attribute__((packed)) ep_uemeas_rep;
 
+/* Request of a measurement
+ *
+ * max_cells and max_meas accepts -1, which indicates that the agent can decide
+ * the amount of cells and measure to take into account.
+ */
 typedef struct __ep_ue_measurement_request {
-	uint8_t meas_id;  /* Id assigned for this measurement */
-	int16_t pci;      /* Physical Cell Id to measure */
-	int16_t earfcn;   /* Frequency to measure */
+	uint8_t  meas_id;  /* Id assigned for this measurement */
+	uint16_t rnti;     /* RNTI which have to perform the measurement */
+	uint16_t earfcn;   /* Frequency to measure */
+	uint16_t interval; /* Interval (in ms) of the measure */
+	int16_t  max_cells;/* Up to this number of cells  */
+	int16_t  max_meas; /* Up to this number of measurements */
 }__attribute__((packed)) ep_uemeas_req;
 
 /******************************************************************************
@@ -85,9 +86,7 @@ typedef struct __ep_ue_measurement_request {
 
 typedef struct __ep_ue_measure {
 	uint8_t  meas_id; /* Id assigned for this measurement */
-	uint16_t rnti;    /* Radio Network Temporary Identifier */
-	uint16_t pci;     /* Physical Cell Id for the measure */
-	uint16_t earfcn;  /* Frequency of the Reference Signal */
+	uint16_t pci;     /* Physical Cell Id measured */
 	uint16_t rsrp;    /* Reference Signal Received Power */
 	uint16_t rsrq;    /* Reference Signal Received Quality */
 } ep_ue_measure;
@@ -96,7 +95,8 @@ typedef struct __ep_ue_measure {
  * Returns the size of the message, or a negative error number.
  */
 int epf_trigger_uemeas_rep_fail(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t        enb_id,
 	uint16_t        cell_id,
 	uint32_t        mod_id);
@@ -105,38 +105,50 @@ int epf_trigger_uemeas_rep_fail(
  * Returns the size of the message, or a negative error number.
  */
 int epf_trigger_uemeas_rep(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t        enb_id,
 	uint16_t        cell_id,
 	uint32_t        mod_id,
-	uint32_t        nof_ues,
-	ep_ue_measure * ues);
+	uint32_t        nof_meas,
+	uint32_t        max,
+	ep_ue_measure * meas);
 
 /* Parse an UE measurement reply looking for the desired fields */
 int epp_trigger_uemeas_rep(
-	char * buf, unsigned int size,
-	uint32_t *      nof_ues,
-	ep_ue_measure * ues);
+	char *          buf,
+	unsigned int    size,
+	uint32_t *      nof_meas,
+	uint32_t        max,
+	ep_ue_measure * meas);
 
 /* Format an UE measurement request.
  * Returns the size of the message, or a negative error number.
  */
 int epf_trigger_uemeas_req(
-	char * buf, unsigned int size,
-	uint32_t   enb_id,
-	uint16_t   cell_id,
-	uint32_t   mod_id,
-	ep_op_type op,
-	uint8_t    meas_id,
-	uint16_t   pci,
-	uint16_t   earfcn);
+	char *       buf,
+	unsigned int size,
+	uint32_t     enb_id,
+	uint16_t     cell_id,
+	uint32_t     mod_id,
+	ep_op_type   op,
+	uint8_t      meas_id,
+	uint16_t     rnti,
+	uint16_t     earfcn,
+	uint16_t     interval,
+	int16_t      max_cells,
+	int16_t      max_meas);
 
 /* Parse an UE measurement request for the desired fields */
 int epp_trigger_uemeas_req(
-	char * buf, unsigned int size,
-	uint8_t  * meas_id,
-	uint16_t * pci,
-	uint16_t * earfcn);
+	char *       buf,
+	unsigned int size,
+	uint8_t  *   meas_id,
+	uint16_t *   rnti,
+	uint16_t *   earfcn,
+	uint16_t *   interval,
+	int16_t  *   max_cells,
+	int16_t  *   max_meas);
 
 #ifdef __cplusplus
 }

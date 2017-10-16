@@ -16,11 +16,13 @@
 #include <emproto.h>
 
 int epf_uerep_rep(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t        nof_ues,
+	uint32_t        max_ues,
 	ep_ue_details * ues)
 {
-	int i = -1; /* On ('ues' = 0) returns (x + (y * (0)))*/
+	int i = -1;
 
 	ep_uerep_rep * rep = (ep_uerep_rep *)buf;
 	ep_uerep_det * det = (ep_uerep_det *)(buf + sizeof(ep_uerep_rep));
@@ -28,7 +30,7 @@ int epf_uerep_rep(
 	rep->nof_ues = htonl(nof_ues);
 
 	if(ues) {
-		for(i = 0; i < nof_ues && i < EP_UE_REPORT_MAX_UES; i++) {
+		for(i = 0; i < nof_ues && i < max_ues; i++) {
 			det[i].pci  = htons(ues[i].pci);
 			det[i].rnti = htons(ues[i].rnti);
 			det[i].plmn = htonl(ues[i].plmn);
@@ -40,8 +42,10 @@ int epf_uerep_rep(
 }
 
 int epp_uerep_rep(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t *      nof_ues,
+	uint32_t        max_ues,
 	ep_ue_details * ues)
 {
 	int i;
@@ -52,7 +56,7 @@ int epp_uerep_rep(
 	*nof_ues = ntohl(rep->nof_ues);
 
 	if(ues) {
-		for(i = 0; i < *nof_ues && i < EP_UE_REPORT_MAX_UES; i++) {
+		for(i = 0; i < *nof_ues && i < max_ues; i++) {
 			ues[i].pci  = ntohs(det[i].pci);
 			ues[i].rnti = ntohs(det[i].rnti);
 			ues[i].plmn = ntohl(det[i].plmn);
@@ -82,7 +86,8 @@ int epp_uerep_req(char * buf, unsigned int size)
  ******************************************************************************/
 
 int epf_trigger_uerep_rep_fail(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t        enb_id,
 	uint16_t        cell_id,
 	uint32_t        mod_id)
@@ -104,17 +109,19 @@ int epf_trigger_uerep_rep_fail(
 		EP_OPERATION_FAIL,
 		EP_DIR_REPLY);
 
-	ms += epf_uerep_rep(buf + ms, size - ms, 0, 0);
+	ms += epf_uerep_rep(buf + ms, size - ms, 0, 0, 0);
 
 	return ms;
 }
 
 int epf_trigger_uerep_rep(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t        enb_id,
 	uint16_t        cell_id,
 	uint32_t        mod_id,
 	uint32_t        nof_ues,
+	uint32_t        max_ues,
 	ep_ue_details * ues)
 {
 	int ms = 0;
@@ -134,29 +141,33 @@ int epf_trigger_uerep_rep(
 		EP_OPERATION_SUCCESS,
 		EP_DIR_REPLY);
 
-	ms += epf_uerep_rep(buf + ms, size - ms, nof_ues, ues);
+	ms += epf_uerep_rep(buf + ms, size - ms, nof_ues, max_ues, ues);
 
 	return ms;
 }
 
 int epp_trigger_uerep_rep(
-	char * buf, unsigned int size,
+	char *          buf,
+	unsigned int    size,
 	uint32_t *      nof_ues,
+	uint32_t        max_ues,
 	ep_ue_details * ues)
 {
 	return epp_uerep_rep(
 		buf + sizeof(ep_hdr) + sizeof(ep_t_hdr),
 		size,
 		nof_ues,
+		max_ues,
 		ues);
 }
 
 int epf_trigger_uerep_req(
-	char * buf, unsigned int size,
-	uint32_t   enb_id,
-	uint16_t   cell_id,
-	uint32_t   mod_id,
-	ep_op_type op)
+	char *       buf,
+	unsigned int size,
+	uint32_t     enb_id,
+	uint16_t     cell_id,
+	uint32_t     mod_id,
+	ep_op_type   op)
 {
 	int ms = 0;
 

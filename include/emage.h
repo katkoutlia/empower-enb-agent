@@ -25,20 +25,7 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-/* Possible triggers which can be installed in the agent. */
-typedef enum em_trigger_type {
-	EM_TRIGGER_NONE = 0,
-	/* UE report trigger. */
-	EM_TRIGGER_UE_REPORT,
-#if 0
-	/* RRC measurements trigger. */
-	EM_RRC_MEAS_TRIGGER,
-	/* RRC measurements configuration trigger. */
-	EM_RRC_MEAS_CONF_TRIGGER,
-	/* Cell statistics trigger. */
-	EM_CELL_STATS_TRIGGER,
-#endif
-} EM_TRIGGER_TYPE;
+#include <stdint.h>
 
 /* Defines the operations that can be customized depending on the technology
  * where you want to embed the agent to. Such procedures will be called by the
@@ -66,30 +53,47 @@ struct em_agent_ops {
 	 * Setup messages:
 	 */
 
-	/* The controller requested to this agent the setup of the base station,
-	 * which means how it is configured, what operation supports and so on.
-	 *
-	 * Filling the reply field with an Empower message will cause the reply
-	 * to be sent back to the controller.
+	/* The controller requested the current setup of a cell.
 	 *
 	 * Returns 0 on success, a negative error code otherwise.
 	 */
-	int (* enb_setup_request) (void);
+	int (* cell_setup_request) (uint32_t mod, uint16_t cell_id);
+
+	/* The controller requested the current setup of the base station.
+	 *
+	 * Returns 0 on success, a negative error code otherwise.
+	 */
+	int (* enb_setup_request) (uint32_t mod);
 
 	/*
-	 * Capabilities-related procedures:
+	 * eNB Capabilities-related procedures:
 	 */
 
 	/* Informs the stack that a log for UE activity has been required by the
 	 * controller. The wrapper shall perform operations to enable such
 	 * functionality into the base station.
 	 *
-	 * Mod. represent the module which requested for such report.
-	 * The id given has to be used to check for its existence later.
+	 * 'mod' represent the ctrl module which requested for such report.
+	 * Trigger id has to be used to check for its existence later.
 	 *
 	 * Returns 0 on success, a negative error code otherwise.
 	 */
-	int (* ue_report) (unsigned int mod, int trig_id, int trig_type);
+	int (* ue_report) (uint32_t mod, int trig_id);
+
+	/* Informs the stack that a measurement request has been issued by the
+	 * controller for a certain device.
+	 *
+	 * Returns 0 on success, a negative error code otherwise.
+	 */
+	int (* ue_measure)(
+		uint32_t     mod,
+		int          trig_id,
+		uint8_t      measure_id,
+		uint16_t     rnti,
+		uint16_t     earfcn,
+		uint16_t     interval,
+		int16_t      max_cells,
+		int16_t      max_meas);
 };
 
 /* Peek the triggers of the given agent and check if a trigger is enabled or
@@ -98,7 +102,7 @@ struct em_agent_ops {
  *
  * Returns 1 if the trigger is enabled, 0 otherwise.
  */
-int em_has_trigger(int enb_id, int tid, int ttype);
+int em_has_trigger(int enb_id, int tid);
 
 /* Check if the agent is currently connected to a controller.
  *

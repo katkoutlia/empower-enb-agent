@@ -100,23 +100,21 @@ int add_send_job(struct agent * a, char * msg, unsigned int size)
 	return status;
 }
 
-int em_has_trigger(int enb_id, int tid, int ttype)
+int em_has_trigger(int enb_id, int tid)
 {
 	struct agent * a = 0;
 
 	int found = 0;
 	struct trigger * t = 0;
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&em_agents_lock);
 	list_for_each_entry(a, &em_agents, next) {
 		if(a->b_id == enb_id) {
-			t = tr_has_trigger(&a->trig, tid, ttype);
+			t = tr_has_trigger(&a->trig, tid);
 			break;
 		}
 	}
 	pthread_spin_unlock(&em_agents_lock);
-/****** UNLOCK ****************************************************************/
 
 	return t ? 1 : 0;
 }
@@ -126,7 +124,6 @@ int em_is_connected(int enb_id)
 	struct agent * a = 0;
 	int found = 0;
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&em_agents_lock);
 	list_for_each_entry(a, &em_agents, next) {
 		if(a->b_id == enb_id) {
@@ -136,7 +133,6 @@ int em_is_connected(int enb_id)
 		}
 	}
 	pthread_spin_unlock(&em_agents_lock);
-/****** UNLOCK ****************************************************************/
 
 	return found;
 }
@@ -167,7 +163,6 @@ int em_send(int enb_id, char * msg, unsigned int size) {
 	int found  = 0;
 	int status = -1;
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&em_agents_lock);
 	list_for_each_entry(a, &em_agents, next) {
 		if(a->b_id == enb_id) {
@@ -177,7 +172,6 @@ int em_send(int enb_id, char * msg, unsigned int size) {
 		}
 	}
 	pthread_spin_unlock(&em_agents_lock);
-/****** UNLOCK ****************************************************************/
 
 	return status;
 }
@@ -190,7 +184,6 @@ int em_terminate_agent(int b_id)
 	int found = 0;
 	int status = 0;
 
-/****** LOCK ******************************************************************/
 	pthread_spin_lock(&em_agents_lock);
 	list_for_each_entry_safe(a, b, &em_agents, next) {
 		if(a->b_id == b_id) {
@@ -200,7 +193,6 @@ int em_terminate_agent(int b_id)
 		}
 	}
 	pthread_spin_unlock(&em_agents_lock);
-/****** UNLOCK ****************************************************************/
 
 	if(found) {
 		if(a->ops->release) {

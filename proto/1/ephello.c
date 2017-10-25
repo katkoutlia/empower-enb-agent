@@ -126,7 +126,7 @@ int epf_single_hello_rep(
 		buf + ms,
 		size - ms,
 		EP_ACT_HELLO,
-		EP_OPERATION_UNSPECIFIED,
+		EP_OPERATION_SUCCESS,
 		EP_DIR_REPLY);
 
 	ms += epf_hello_rep(buf + ms, size - ms, id);
@@ -210,7 +210,7 @@ int epf_sched_hello_rep(
 		buf + ms,
 		size - ms,
 		EP_ACT_HELLO,
-		EP_OPERATION_UNSPECIFIED,
+		EP_OPERATION_SUCCESS,
 		EP_DIR_REPLY,
 		interval);
 

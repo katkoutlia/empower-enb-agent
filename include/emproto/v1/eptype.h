@@ -51,6 +51,7 @@ typedef enum __ep_action_type {
 	EP_ACT_CCAP          = 3, /* Cell capabilities */
 	EP_ACT_UE_REPORT     = 4, /* UE report */
 	EP_ACT_UE_MEASURE    = 5, /* UE RRC measurements */
+	EP_ACT_MAC_REPORT    = 6  /* Report coming from MAC layer */
 } ep_act_type;
 
 #ifdef __cplusplus

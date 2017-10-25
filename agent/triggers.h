@@ -25,7 +25,8 @@
 /* Possible type of triggers which can be created */
 enum trigger_type {
 	TR_TYPE_UE_REP,   /* UE report */
-	TR_TYPE_UE_MEAS   /* UE measurement */
+	TR_TYPE_UE_MEAS,  /* UE measurement */
+	TR_TYPE_MAC_REP   /* MAC reporting */
 };
 
 /* Definition for a single trigger. */

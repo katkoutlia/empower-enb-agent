@@ -380,6 +380,37 @@ int net_te_ue_report(struct net_context * net, char * msg, int size)
 		a, seq, JOB_TYPE_UE_REPORT, 1, 0, t, sizeof(struct trigger));
 }
 
+int net_te_mac_report(struct net_context * net, char * msg, int size)
+{
+	uint32_t         mod;
+	uint32_t         seq;
+	uint32_t         op;
+
+	struct trigger * t;
+	struct agent *   a = container_of(net, struct agent, net);
+
+	epp_head(msg, size, 0, 0, 0, &mod);
+
+	seq = epp_seq(msg, size);
+	op  = epp_trigger_op(msg, size);
+
+	if(op == EP_OPERATION_ADD) {
+		t = tr_add(
+			&a->trig,
+			tr_next_id(&a->trig),
+			mod,
+			TR_TYPE_MAC_REP,
+			0,
+			msg,
+			size);
+	} else {
+		return tr_del(&a->trig, mod, TR_TYPE_MAC_REP, 0);
+	}
+
+	return net_sched_job(
+		a, seq, JOB_TYPE_MAC_REPORT, 1, 0, t, sizeof(struct trigger));
+}
+
 /******************************************************************************
  * Top-level message handlers.                                                *
  ******************************************************************************/
@@ -458,6 +489,8 @@ int net_process_trigger_event(
 		return net_te_ue_report(net, msg, size);
 	case EP_ACT_UE_MEASURE:
 		return net_te_ue_measure(net, msg, size);
+	case EP_ACT_MAC_REPORT:
+		return net_te_mac_report(net, msg, size);
 	default:
 		EMDBG("Unknown trigger event, type=%d", t);
 		break;

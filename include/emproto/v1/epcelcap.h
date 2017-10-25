@@ -28,13 +28,18 @@ extern "C"
 {
 #endif /* __cplusplus */
 
+/* Capabilities for a single Cell */
 typedef enum __ep_cell_capabilities_types {
 	/* Can't do anything except present himself */
-	EP_CCAP_NOTHING = 0,
+	EP_CCAP_NOTHING    = 0,
+	/* Cell can report about PHY layer status */
+	EP_CCAP_PHY_REPORT = 1,
+	/* Cell can report about MAC layer status */
+	EP_CCAP_MAC_REPORT = 2,
 } ep_ccap_type;
 
 /*
- * eNB capabilities message
+ * Cell capabilities message
  */
 
 typedef struct __ep_cell_capabilities_reply {

@@ -21,7 +21,6 @@ CC=gcc
 
 INCLDIR=/usr/include/emage
 INSTDIR=/usr/lib
-PYDIR=$(shell python -m site --user-site)
 
 VERS=1
 
@@ -46,10 +45,3 @@ uninstall:
 	rm $(INSTDIR)/libemproto.so
 	rm $(INCLDIR)/emproto.h
 	rm -r $(INCLDIR)/emproto
-	
-pyinstall:
-	mkdir -p $(PYDIR)
-	cp ./$(VERS)/emproto.py $(PYDIR)
-	
-pyuninstall:
-	rm -f $(PYDIR)/emproto.py

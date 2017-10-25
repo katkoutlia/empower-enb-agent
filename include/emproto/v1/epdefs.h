@@ -54,6 +54,7 @@ extern "C"
 #include "epcelcap.h"
 #include "epuerep.h"
 #include "epuemeas.h"
+#include "epmacrep.h"
 
 #ifdef __cplusplus
 }

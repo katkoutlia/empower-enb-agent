@@ -94,6 +94,13 @@ struct em_agent_ops {
 		uint16_t     interval,
 		int16_t      max_cells,
 		int16_t      max_meas);
+
+	/* Informs the wrapper that the controller required to report the status
+	 * of the MAC layer.
+	 *
+	 * Returns 0 on success, a negative error code otherwise.
+	 */
+	int (* mac_report) (uint32_t mod, int32_t interval, int trig_id);
 };
 
 /* Peek the triggers of the given agent and check if a trigger is enabled or

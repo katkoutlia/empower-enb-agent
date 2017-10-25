@@ -164,6 +164,25 @@ int sched_perform_ue_measure(struct agent * a, struct sched_job * job)
 	return JOB_CONSUMED;
 }
 
+int sched_perform_mac_report(struct agent * a, struct sched_job * job)
+{
+	uint32_t         mod = 0;
+	int16_t          intv;
+	struct trigger * t   = (struct trigger *)job->args;
+
+	if(a->ops && a->ops->mac_report) {
+		t = tr_find(&a->trig, t->id);
+
+		if(t) {
+			epp_trigger_macrep_req(t->req, t->size, &intv);
+
+			a->ops->mac_report(t->mod, intv, t->id);
+		}
+	}
+
+	return JOB_CONSUMED;
+}
+
 int sched_perform_ue_report(struct agent * a, struct sched_job * job)
 {
 	uint32_t         mod = 0;
@@ -258,6 +277,9 @@ int sched_perform_job(
 		break;
 	case JOB_TYPE_UE_MEASURE:
 		status = sched_perform_ue_measure(a, job);
+		break;
+	case JOB_TYPE_MAC_REPORT:
+		status = sched_perform_mac_report(a, job);
 		break;
 	default:
 		EMDBG("Unknown job cannot be performed, type=%d", job->type);

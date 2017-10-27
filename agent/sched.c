@@ -123,6 +123,33 @@ int sched_perform_enb_setup(struct agent * a, struct sched_job * job)
 	return JOB_CONSUMED;
 }
 
+int sched_perform_ho(struct agent * a, struct sched_job * job)
+{
+	uint32_t mod   = 0;
+	uint16_t scell = 0;
+	uint16_t rnti  = 0;
+	uint32_t tenb  = 0;
+	uint16_t tcell = 0;
+	uint8_t  cause = 0;
+
+	if(epp_head((char *)job->args, job->size, 0, 0, &scell, &mod)) {
+		EMLOG("Cannot parse cell id in Handover");
+		return 0;
+	}
+
+	if(epp_ho_req(
+		(char *)job->args, job->size, &rnti, &tenb, &tcell, &cause)) {
+		EMLOG("Cannot parse request elements in Handover");
+		return 0;
+	}
+
+	if(a->ops && a->ops->handover_UE) {
+		a->ops->handover_UE(mod, scell, rnti, tenb, tcell, cause);
+	}
+
+	return JOB_CONSUMED;
+}
+
 int sched_perform_ue_measure(struct agent * a, struct sched_job * job)
 {
 	struct trigger * t   = (struct trigger *)job->args;
@@ -280,6 +307,9 @@ int sched_perform_job(
 		break;
 	case JOB_TYPE_MAC_REPORT:
 		status = sched_perform_mac_report(a, job);
+		break;
+	case JOB_TYPE_HO:
+		status = sched_perform_ho(a, job);
 		break;
 	default:
 		EMDBG("Unknown job cannot be performed, type=%d", job->type);

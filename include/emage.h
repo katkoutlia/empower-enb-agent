@@ -85,7 +85,7 @@ struct em_agent_ops {
 	 *
 	 * Returns 0 on success, a negative error code otherwise.
 	 */
-	int (* ue_measure)(
+	int (* ue_measure) (
 		uint32_t     mod,
 		int          trig_id,
 		uint8_t      measure_id,
@@ -94,6 +94,24 @@ struct em_agent_ops {
 		uint16_t     interval,
 		int16_t      max_cells,
 		int16_t      max_meas);
+
+	/* Informs the stack that an Handover command has been requested by the
+	 * controller. The request is directed for this eNB to a target one,
+	 * with a defined transaction from a cell to another one.
+	 *
+	 * Returns 0 on success, a negative error code otherwise.
+	 */
+	int (* handover_UE) (
+		uint32_t mod,
+		uint16_t source_cell,
+		uint16_t rnti,
+		uint32_t target_enb,
+		uint16_t target_cell,
+		uint8_t  cause);
+
+	/*
+	 * Cell-related capabilities procedures:
+	 */
 
 	/* Informs the wrapper that the controller required to report the status
 	 * of the MAC layer.

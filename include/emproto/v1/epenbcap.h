@@ -33,6 +33,7 @@ extern "C"
 
 #define EP_ENCAP_MAX_CELLS      8
 
+/* NOTE: Elements here must have power-of-two values */
 typedef enum __ep_enb_capabilities_types {
 	/* Can't do anything except present himself */
 	EP_ECAP_NOTHING    = 0,
@@ -40,6 +41,8 @@ typedef enum __ep_enb_capabilities_types {
 	EP_ECAP_UE_REPORT  = 1,
 	/* Can report UEs signal power */
 	EP_ECAP_UE_MEASURE = 2,
+	/* Can hand-over UE to other eNBs */
+	EP_ECAP_HANDOVER   = 4,
 } ep_ecap_type;
 
 /*

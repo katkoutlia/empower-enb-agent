@@ -90,7 +90,7 @@ int epf_trigger_macrep_rep_fail(
 		cell_id,
 		mod_id);
 
-	ms += epf_single(
+	ms += epf_trigger(
 		buf + ms,
 		size - ms,
 		EP_ACT_MAC_REPORT,
@@ -119,7 +119,7 @@ int epf_trigger_macrep_rep_ns(
 		cell_id,
 		mod_id);
 
-	ms += epf_single(
+	ms += epf_trigger(
 		buf + ms,
 		size - ms,
 		EP_ACT_MAC_REPORT,
@@ -149,7 +149,7 @@ int epf_trigger_macrep_rep(
 		cell_id,
 		mod_id);
 
-	ms += epf_single(
+	ms += epf_trigger(
 		buf + ms,
 		size - ms,
 		EP_ACT_MAC_REPORT,
@@ -190,7 +190,7 @@ int epf_trigger_macrep_req(
 		cell_id,
 		mod_id);
 
-	ms += epf_single(
+	ms += epf_trigger(
 		buf + ms,
 		size - ms,
 		EP_ACT_MAC_REPORT,

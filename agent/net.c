@@ -315,6 +315,16 @@ int net_se_enb_setup(struct net_context * net, char * msg, int size)
 	return net_sched_job(a, seq, JOB_TYPE_ENB_SETUP, 1, 0, msg, size);
 }
 
+int net_se_ho(struct net_context * net, char * msg, int size)
+{
+	uint32_t       seq;
+	struct agent * a = container_of(net, struct agent, net);
+
+	seq = epp_seq(msg, size);
+
+	return net_sched_job(a, seq, JOB_TYPE_HO, 1, 0, msg, size);
+}
+
 int net_te_ue_measure(struct net_context * net, char * msg, int size)
 {
 	uint32_t         mod;
@@ -461,6 +471,12 @@ int net_process_single_event(
 		if(epp_single_dir(msg, size) == EP_DIR_REQUEST) {
 			EMDBG("Cell capabilities request received!");
 			return net_se_cell_setup(net, msg, size);
+		}
+		break;
+	case EP_ACT_HANDOVER:
+		if(epp_single_dir(msg, size) == EP_DIR_REQUEST) {
+			EMDBG("Handover request received!");
+			return net_se_ho(net, msg, size);
 		}
 		break;
 	default:

@@ -28,7 +28,7 @@ all:
 	make protolib
 	
 protolib:
-	$(CC) -I../include -c -fpic ./$(VERS)/*.c
+	$(CC) -I../include -c -Wall -fpic ./$(VERS)/*.c
 	$(CC) -shared -o libemproto.so *.o  
 
 clean:
@@ -38,6 +38,7 @@ clean:
 	
 install:
 	cp ./libemproto.so $(INSTDIR)
+	mkdir -p $(INCLDIR)
 	cp ../include/emproto.h $(INCLDIR)/
 	cp -r ../include/emproto $(INCLDIR)/
 	

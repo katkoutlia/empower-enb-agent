@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <netinet/in.h>
+
 #include <emproto.h>
 
 int epf_ccap_rep(
@@ -165,14 +167,14 @@ int epf_single_ccap_req(
 		EP_OPERATION_UNSPECIFIED,
 		EP_DIR_REQUEST);
 
-	ms += epf_ecap_req(buf + ms, size - ms);
+	ms += epf_ccap_req(buf + ms, size - ms);
 
 	return ms;
 }
 
 int epp_single_ccap_req(char * buf, unsigned int size)
 {
-	return epp_ecap_req(
+	return epp_ccap_req(
 		buf + sizeof(ep_hdr) + sizeof(ep_s_hdr),
 		size);
 }

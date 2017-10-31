@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <netinet/in.h>
+
 #include <emproto.h>
 
 int epf_ho_rep(char * buf, unsigned int size)

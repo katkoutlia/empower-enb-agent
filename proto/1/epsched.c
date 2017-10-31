@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include <netinet/in.h>
+
 #include <emproto.h>
 
 /******************************************************************************

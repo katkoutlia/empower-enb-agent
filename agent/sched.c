@@ -57,7 +57,7 @@ int sched_send_msg(struct agent * a, char * msg, unsigned int size)
 	uint32_t ms = htonl(size);
 
 	if(size + EP_PROLOGUE_SIZE > EM_BUF_SIZE) {
-		EMLOG("Message too long, msg=%u, limit=%u!",
+		EMLOG("Message too long, msg=%lu, limit=%d!",
 			size + sizeof(uint32_t),
 			EM_BUF_SIZE);
 
@@ -137,7 +137,7 @@ int sched_perform_ho(struct agent * a, struct sched_job * job)
 		return 0;
 	}
 
-	if(epp_ho_req(
+	if(epp_single_ho_req(
 		(char *)job->args, job->size, &rnti, &tenb, &tcell, &cause)) {
 		EMLOG("Cannot parse request elements in Handover");
 		return 0;

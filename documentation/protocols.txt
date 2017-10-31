@@ -118,5 +118,24 @@ Let's see some quick example of such organization:
 
   MESSAGES and PROTOCOL BEHAVIOR
 
+Here following there is a resume of protocol action and their type as it is
+currently handled by the agent subsystem:
+
++-------------------+----------+----------+----------+
+|                   |  SINGLE  | SCHEDULE | TRIGGER  |
+| ACTION TYPE       |          |          |          |
++-------------------+----------+----------+----------+
+| Cell capabilities |    X     |          |          |
++-------------------+----------+----------+----------+
+| eNB capabilities  |    X     |          |          |
++-------------------+----------+----------+----------+
+| Hello             |          |    X     |          |
++-------------------+----------+----------+----------+
+| Mac report        |          |          |    X     |
++-------------------+----------+----------+----------+
+| Ue report         |          |          |    X     |
++-------------------+----------+----------+----------+
+| Ue measure        |          |          |    X     |
++-------------------+----------+----------+----------+
 
 Kewin R.

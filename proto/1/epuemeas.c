@@ -264,7 +264,7 @@ int epp_trigger_uemeas_req(
 	int16_t  *   max_meas)
 {
 	return epp_uemeas_req(
-		buf,
+		buf + sizeof(ep_hdr) + sizeof(ep_t_hdr),
 		size,
 		meas_id,
 		rnti,

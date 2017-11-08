@@ -93,6 +93,7 @@ int epf_single_hello_req(
 		EP_DIR_REQUEST);
 
 	ms += epf_hello_req(buf + ms, size - ms, id);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -132,6 +133,7 @@ int epf_single_hello_rep(
 		EP_DIR_REPLY);
 
 	ms += epf_hello_rep(buf + ms, size - ms, id);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -175,6 +177,7 @@ int epf_sched_hello_req(
 		interval);
 
 	ms += epf_hello_req(buf + ms, size - ms, id);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -217,6 +220,7 @@ int epf_sched_hello_rep(
 		interval);
 
 	ms += epf_hello_rep(buf + ms, size - ms, id);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }

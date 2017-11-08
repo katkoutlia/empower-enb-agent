@@ -109,6 +109,7 @@ int epf_single_ecap_rep_fail(
 		EP_DIR_REPLY);
 
 	ms += epf_ecap_rep(buf + ms, size - ms, 0, 0, 0);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -141,6 +142,7 @@ int epf_single_ecap_rep(
 		EP_DIR_REPLY);
 
 	ms += epf_ecap_rep(buf + ms, size - ms, cap_mask, cells, nof_cells);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -185,6 +187,7 @@ int epf_single_ecap_req(
 		EP_DIR_REQUEST);
 
 	ms += epf_ecap_req(buf + ms, size - ms);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }

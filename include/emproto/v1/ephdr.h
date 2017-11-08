@@ -33,6 +33,9 @@ extern "C"
 {
 #endif /* __cplusplus */
 
+/* Size of the header */
+#define EP_HEADER_SIZE          sizeof(ep_hdr)
+
 typedef struct __ep_header_id {
 	uint32_t enb_id;        /* Base station identifier */
 	uint16_t cell_id;       /* Physical cell id */
@@ -43,6 +46,8 @@ typedef struct __ep_header {
 	uint8_t  type;
 	uint8_t  vers;
 	ep_hdrid id;
+	/* Length of the whole packet (headers + data) */
+	uint16_t length;
 	uint32_t seq;           /* Sequence number */
 }__attribute__((packed)) ep_hdr;
 
@@ -72,8 +77,14 @@ ep_msg_type epp_msg_type(char * buf, unsigned int size);
 /* Extracts the sequence number from the message */
 uint32_t    epp_seq(char * buf, unsigned int size);
 
+/* Extracts the message length in the header. */
+uint16_t    epp_msg_length(char * buf, unsigned int size);
+
 /* Inject a sequence number in the header. */
 int         epf_seq(char * buf, unsigned int size, uint32_t seq);
+
+/* Inject the message length in the header. */
+int         epf_msg_length(char * buf, unsigned int size, uint16_t len);
 
 #ifdef __cplusplus
 }

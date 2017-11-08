@@ -158,6 +158,7 @@ int epf_trigger_uemeas_rep_fail(
 		EP_DIR_REPLY);
 
 	ms += epf_uemeas_rep(buf + ms, size - ms, 0, 0, 0);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -190,6 +191,7 @@ int epf_trigger_uemeas_rep(
 		EP_DIR_REPLY);
 
 	ms += epf_uemeas_rep(buf + ms, size - ms, nof_meas, max, ues);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -249,6 +251,8 @@ int epf_trigger_uemeas_req(
 		interval,
 		max_cells,
 		max_meas);
+
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }

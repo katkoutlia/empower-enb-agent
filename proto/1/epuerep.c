@@ -112,6 +112,7 @@ int epf_trigger_uerep_rep_fail(
 		EP_DIR_REPLY);
 
 	ms += epf_uerep_rep(buf + ms, size - ms, 0, 0, 0);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -144,6 +145,7 @@ int epf_trigger_uerep_rep(
 		EP_DIR_REPLY);
 
 	ms += epf_uerep_rep(buf + ms, size - ms, nof_ues, max_ues, ues);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -189,6 +191,7 @@ int epf_trigger_uerep_req(
 		EP_DIR_REQUEST);
 
 	ms += epf_uerep_req(buf + ms, size - ms);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }

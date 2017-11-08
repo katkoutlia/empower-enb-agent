@@ -103,6 +103,7 @@ int epf_single_ho_rep_fail(
 		EP_DIR_REPLY);
 
 	ms += epf_ho_rep(buf + ms, size - ms);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -132,6 +133,7 @@ int epf_single_ho_rep_ns(
 		EP_DIR_REPLY);
 
 	ms += epf_ho_rep(buf + ms, size - ms);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -161,6 +163,7 @@ int epf_single_ho_rep(
 		EP_DIR_REPLY);
 
 	ms += epf_ho_rep(buf + ms, size - ms);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -201,6 +204,7 @@ int epf_single_ho_req(
 		EP_DIR_REQUEST);
 
 	ms += epf_ho_req(buf + ms, size - ms, rnti, enb, pci, cause);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }

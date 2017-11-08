@@ -100,6 +100,7 @@ int epf_trigger_macrep_rep_fail(
 		EP_DIR_REPLY);
 
 	ms += epf_macrep_rep(buf + ms, size - ms, 0);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -129,6 +130,7 @@ int epf_trigger_macrep_rep_ns(
 		EP_DIR_REPLY);
 
 	ms += epf_macrep_rep(buf + ms, size - ms, 0);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -159,6 +161,7 @@ int epf_trigger_macrep_rep(
 		EP_DIR_REPLY);
 
 	ms += epf_macrep_rep(buf + ms, size - ms, det);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -200,6 +203,7 @@ int epf_trigger_macrep_req(
 		EP_DIR_REPLY);
 
 	ms += epf_macrep_req(buf + ms, size - ms, interval);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }

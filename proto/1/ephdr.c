@@ -89,11 +89,27 @@ uint32_t epp_seq(char * buf, unsigned int size)
 	return ntohl(h->seq);
 }
 
+uint16_t epp_msg_length(char * buf, unsigned int size)
+{
+	ep_hdr * h = (ep_hdr *)buf;
+
+	return ntohs(h->length);
+}
+
 int epf_seq(char * buf, unsigned int size, uint32_t seq)
 {
 	ep_hdr * h = (ep_hdr *)buf;
 
 	h->seq = htonl(seq);
+
+	return EP_SUCCESS;
+}
+
+int epf_msg_length(char * buf, unsigned int size, uint16_t len)
+{
+	ep_hdr * h = (ep_hdr *)buf;
+
+	h->length = htons(len);
 
 	return EP_SUCCESS;
 }

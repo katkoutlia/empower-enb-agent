@@ -100,6 +100,7 @@ int epf_single_ccap_rep_fail(
 		EP_DIR_REPLY);
 
 	ms += epf_ccap_rep(buf + ms, size - ms, 0);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -130,6 +131,7 @@ int epf_single_ccap_rep(
 		EP_DIR_REPLY);
 
 	ms += epf_ccap_rep(buf + ms, size - ms, cell);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
@@ -168,6 +170,7 @@ int epf_single_ccap_req(
 		EP_DIR_REQUEST);
 
 	ms += epf_ccap_req(buf + ms, size - ms);
+	epf_msg_length(buf, size, ms);
 
 	return ms;
 }

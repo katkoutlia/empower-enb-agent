@@ -602,14 +602,14 @@ next:
 
 		bread = 0;
 
-		/* Continue until EP_PROLOGUE_SIZE bytes have been collected */
-		while(bread < EP_PROLOGUE_SIZE) {
+		/* Continue until EP_HEADER_SIZE bytes have been collected */
+		while(bread < EP_HEADER_SIZE) {
 			if(net->stop) {
 				goto stop;
 			}
 
 			op = net_recv(
-				net, buf + bread, EP_PROLOGUE_SIZE - bread);
+				net, buf + bread, EP_HEADER_SIZE - bread);
 
 			if(op <= 0) {
 				if(errno == EAGAIN) {
@@ -625,20 +625,19 @@ next:
 			bread += op;
 		}
 
-		if(bread != EP_PROLOGUE_SIZE) {
+		if(bread != EP_HEADER_SIZE) {
 			EMDBG("Read %d bytes, but only %d to process!",
-				bread, EP_PROLOGUE_SIZE);
+				bread, EP_HEADER_SIZE);
 
 			net_not_connected(net);
 			goto next;
 		}
 
-		memcpy(&mlen, buf, bread);
-		mlen = ntohl(mlen);
+		mlen = epp_msg_length(buf, bread);
 
 		EMDBG("Receiving a message of size %d", mlen);
 
-		bread = 0;
+		//bread = 0;
 
 		/* Continue until the entire message has been collected */
 		while(bread < mlen) {

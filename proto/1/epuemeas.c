@@ -103,7 +103,7 @@ int epp_uemeas_req(
 	ep_uemeas_req * req = (ep_uemeas_req *) buf;
 
 	if(meas_id) {
-		*meas_id = ntohs(req->meas_id);
+		*meas_id = req->meas_id;
 	}
 
 	if(rnti) {

@@ -302,6 +302,8 @@ int net_se_cell_setup(struct net_context * net, char * msg, int size)
 
 	seq = epp_seq(msg, size);
 
+	EMDBG("Single message cell setup");
+
 	return net_sched_job(a, seq, JOB_TYPE_CELL_SETUP, 1, 0, msg, size);
 }
 
@@ -312,6 +314,8 @@ int net_se_enb_setup(struct net_context * net, char * msg, int size)
 
 	seq = epp_seq(msg, size);
 
+	EMDBG("Single message eNB setup");
+
 	return net_sched_job(a, seq, JOB_TYPE_ENB_SETUP, 1, 0, msg, size);
 }
 
@@ -321,6 +325,8 @@ int net_se_ho(struct net_context * net, char * msg, int size)
 	struct agent * a = container_of(net, struct agent, net);
 
 	seq = epp_seq(msg, size);
+
+	EMDBG("Single message Handover");
 
 	return net_sched_job(a, seq, JOB_TYPE_HO, 1, 0, msg, size);
 }
@@ -341,6 +347,8 @@ int net_te_ue_measure(struct net_context * net, char * msg, int size)
 	op  = epp_trigger_op(msg, size);
 
 	epp_trigger_uemeas_req(msg, size, &m_id, 0, 0, 0, 0, 0);
+
+	EMDBG("Trigger message UE measure, mod=%d, op=%d", mod, op);
 
 	if(op == EP_OPERATION_ADD) {
 		t = tr_add(
@@ -373,6 +381,8 @@ int net_te_ue_report(struct net_context * net, char * msg, int size)
 	seq = epp_seq(msg, size);
 	op  = epp_trigger_op(msg, size);
 
+	EMDBG("Trigger message UE report, mod=%d, op=%d", mod, op);
+
 	if(op == EP_OPERATION_ADD) {
 		t = tr_add(
 			&a->trig,
@@ -403,6 +413,8 @@ int net_te_mac_report(struct net_context * net, char * msg, int size)
 
 	seq = epp_seq(msg, size);
 	op  = epp_trigger_op(msg, size);
+
+	EMDBG("Trigger message MAC report, mod=%d, op=%d", mod, op);
 
 	if(op == EP_OPERATION_ADD) {
 		t = tr_add(
@@ -613,6 +625,14 @@ next:
 			bread += op;
 		}
 
+		if(bread != EP_PROLOGUE_SIZE) {
+			EMDBG("Read %d bytes, but only %d to process!",
+				bread, EP_PROLOGUE_SIZE);
+
+			net_not_connected(net);
+			goto next;
+		}
+
 		memcpy(&mlen, buf, bread);
 		mlen = ntohl(mlen);
 
@@ -640,6 +660,14 @@ next:
 			}
 
 			bread += op;
+		}
+
+		if(bread != mlen) {
+			EMDBG("Read %d bytes, but only %d to process!",
+				bread, mlen);
+
+			net_not_connected(net);
+			goto next;
 		}
 
 		/* Finally we collected the entire message; process it! */

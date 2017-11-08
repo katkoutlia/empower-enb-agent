@@ -56,7 +56,7 @@ int sched_send_msg(struct agent * a, char * msg, unsigned int size)
 	char     buf[EM_BUF_SIZE];
 	uint32_t ms = htonl(size);
 
-	if(size + EP_PROLOGUE_SIZE > EM_BUF_SIZE) {
+	if(size > EM_BUF_SIZE) {
 		EMLOG("Message too long, msg=%lu, limit=%d!",
 			size + sizeof(uint32_t),
 			EM_BUF_SIZE);
@@ -65,12 +65,12 @@ int sched_send_msg(struct agent * a, char * msg, unsigned int size)
 	}
 
 	/* How long will be the message? */
-	memcpy(buf, &ms, EP_PROLOGUE_SIZE);
+	//memcpy(buf, &ms, EP_PROLOGUE_SIZE);
 
 	/* Insert the correct sequence number before sending */
 	epf_seq(msg, size, net_next_seq(&a->net));
 
-	memcpy(buf + EP_PROLOGUE_SIZE, msg, size);
+	//memcpy(buf + EP_PROLOGUE_SIZE, msg, size);
 
 	EMDBG("Sending a message of %d bytes...", size);
 

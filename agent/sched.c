@@ -53,9 +53,6 @@
 /* Fix the last details and send the message */
 int sched_send_msg(struct agent * a, char * msg, unsigned int size)
 {
-	char     buf[EM_BUF_SIZE];
-	uint32_t ms = htonl(size);
-
 	if(size > EM_BUF_SIZE) {
 		EMLOG("Message too long, msg=%lu, limit=%d!",
 			size + sizeof(uint32_t),
@@ -64,17 +61,12 @@ int sched_send_msg(struct agent * a, char * msg, unsigned int size)
 		return JOB_CONSUMED;
 	}
 
-	/* How long will be the message? */
-	//memcpy(buf, &ms, EP_PROLOGUE_SIZE);
-
 	/* Insert the correct sequence number before sending */
 	epf_seq(msg, size, net_next_seq(&a->net));
 
-	//memcpy(buf + EP_PROLOGUE_SIZE, msg, size);
-
 	EMDBG("Sending a message of %d bytes...", size);
 
-	if(net_send(&a->net, buf, size + EP_PROLOGUE_SIZE) < 0) {
+	if(net_send(&a->net, msg, size) < 0) {
 		return JOB_NET_ERROR; /* On error */
 	} else {
 		return JOB_CONSUMED;  /* On success */

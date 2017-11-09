@@ -236,7 +236,7 @@ int net_recv(struct net_context * context, char * buf, unsigned int size) {
 /* Send data. */
 int net_send(struct net_context * context, char * buf, unsigned int size) {
 #ifdef EM_DISSECT_MSG
-	net_show_msg(buf + EP_PROLOGUE_SIZE, size, 1);
+	net_show_msg(buf, size, 1);
 #endif /* EM_DISSECT_MSG */
 
 	/* NOTE:
@@ -629,6 +629,10 @@ next:
 			EMDBG("Read %d bytes, but only %d to process!",
 				bread, EP_HEADER_SIZE);
 
+#ifdef EM_DISSECT_MSG
+			net_show_msg(buf, bread, 0);
+#endif /* EM_DISSECT_MSG */
+
 			net_not_connected(net);
 			goto next;
 		}
@@ -664,6 +668,10 @@ next:
 		if(bread != mlen) {
 			EMDBG("Read %d bytes, but only %d to process!",
 				bread, mlen);
+
+#ifdef EM_DISSECT_MSG
+			net_show_msg(buf, bread, 0);
+#endif /* EM_DISSECT_MSG */
 
 			net_not_connected(net);
 			goto next;

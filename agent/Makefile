@@ -26,7 +26,6 @@ AGENTP=.
 #
 INSTDIR=/usr/lib
 INCLDIR=/usr/include/emage
-CONFDIR=/etc
 
 LIBS=-lpthread -lprotobuf-c
 INCLUDES=-I../include
@@ -65,10 +64,8 @@ install:
 	mkdir -p $(INCLDIR)
 	cp -r ../include/emage.h $(INCLDIR)/
 	cp -r ../include/emlog.h $(INCLDIR)/
-	cp -r ../conf/empower $(CONFDIR)
 
 uninstall:
 	rm $(INSTDIR)/libemagent.so
 	rm -f $(INCLDIR)/emage.h
 	rm -f $(INCLDIR)/emlog.h
-	rm -r /etc/empower

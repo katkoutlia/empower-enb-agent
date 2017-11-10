@@ -197,11 +197,28 @@ void tr_free(struct trigger * t)
 
 int tr_next_id(struct tr_context * tc)
 {
-	int n;
+	struct trigger * t = 0;
+	int              n = 0;
 
-	pthread_spin_lock(&tc->lock);
-	n = tc->next++;
-	pthread_spin_unlock(&tc->lock);
+	/* Select a random trigger ID which is not already present */
+	do {
+		/* Rand generate values from 0 to RAND_MAX */
+		n = rand();
+
+		if(!n) {
+			n++;
+		}
+
+		pthread_spin_lock(&tc->lock);
+		list_for_each_entry(t, &tc->ts, next) {
+			if(n == t->id) {
+				n = 0;
+				break;
+			}
+		}
+		n = tc->next++;
+		pthread_spin_unlock(&tc->lock);
+	} while(!n);
 
 	return n;
 }

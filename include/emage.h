@@ -49,6 +49,15 @@ struct em_agent_ops {
 	 */
 	int (* release) (void);
 
+	/* Signal the wrapper that the controller disconnected from the agent.
+	 *
+	 * You should take the necessary operation to ensure a coherent behavior
+	 * between the two instances.
+	 *
+	 * Returns 0 on success, a negative error code otherwise.
+	 */
+	int (* disconnected) (void);
+
 	/*
 	 * Setup messages:
 	 */

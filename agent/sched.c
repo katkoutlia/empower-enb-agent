@@ -398,9 +398,15 @@ int sched_consume(struct sched_context * sched) {
 
 			tr_flush(&a->trig);
 
-			/* Signal the connection down now.
+			/* Alert wrapper about controller disconnection */
+			if(a->ops->disconnected) {
+				a->ops->disconnected();
+			}
+
+			/* Signal the network that the connection down now.
+			 *
 			 * We do it here since we are sure we cleaned all the
-			 * jobs, and eventual new job(from a new successful
+			 * jobs, and eventual new job (from a new successful
 			 * connection) don't get deleted.
 			 */
 			net_not_connected(net);

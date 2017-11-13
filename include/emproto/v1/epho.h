@@ -42,7 +42,10 @@ typedef struct __ep_handover_request {
 }__attribute__((packed)) ep_ho_req;
 
 typedef struct __ep_handover_reply {
-	uint8_t  dummy;      /* Dummy field */
+	uint16_t origin_eNB;  /* Original eNB  */
+	uint16_t origin_pci;  /* Original PCI  */
+	uint16_t origin_rnti; /* Original RNTI */
+	uint16_t target_rnti; /* Target RNTI   */
 }__attribute__((packed)) ep_ho_rep;
 
 /******************************************************************************
@@ -77,10 +80,20 @@ int epf_single_ho_rep(
 	unsigned int size,
 	uint32_t     enb_id,
 	uint16_t     cell_id,
-	uint32_t     mod_id);
+	uint32_t     mod_id,
+	uint32_t     origin_eNB,
+	uint16_t     origin_pci,
+	uint16_t     origin_rnti,
+	uint16_t     target_rnti);
 
 /* Parse an handover reply looking for the desired fields */
-int epp_single_ho_rep(char * buf, unsigned int  size);
+int epp_single_ho_rep(
+	char *       buf,
+	unsigned int size,
+	uint32_t *   origin_eNB,
+	uint16_t *   origin_pci,
+	uint16_t *   origin_rnti,
+	uint16_t *   target_rnti);
 
 /* Format an handover request.
  * Returns the size of the message, or a negative error number.

@@ -53,6 +53,9 @@ int epf_schedule(
 /* Extracts the direction on an Empower schedule message */
 ep_dir_type epp_schedule_dir(char * buf, unsigned int size);
 
+/* Extracts the interval on an Empower schedule message */
+uint32_t    epp_sched_interval(char * buf, unsigned int size);
+
 /* Extracts the schedule type from an Empower message */
 ep_act_type epp_schedule_type(char * buf, unsigned int size);
 

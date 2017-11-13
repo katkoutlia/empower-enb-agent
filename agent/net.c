@@ -101,6 +101,7 @@ int net_connected(struct net_context * net) {
 	}
 
 	INIT_LIST_HEAD(&h->next);
+	h->id         = 0;
 	h->elapse     = 2000;
 	h->type       = JOB_TYPE_HELLO;
 	h->reschedule = -1;
@@ -295,6 +296,25 @@ int net_sched_job(
  * Message specific procedures.                                               *
  ******************************************************************************/
 
+int net_sc_hello(struct net_context * net, char * msg, int size)
+{
+	struct sched_job * j;
+	struct agent *     a = container_of(net, struct agent, net);
+	uint32_t           intv;
+
+	EMDBG("Schedule message Hello");
+
+	/* Find the Hello job and change its interval */
+	j = sched_find_job(&a->sched, 0, JOB_TYPE_HELLO);
+
+	if(j) {
+		intv      = epp_sched_interval(msg, size);
+		j->elapse = intv;
+	}
+
+	return 0;
+}
+
 int net_se_cell_setup(struct net_context * net, char * msg, int size)
 {
 	uint32_t       seq;
@@ -449,7 +469,10 @@ int net_process_sched_event(
 
 	switch(s) {
 	case EP_ACT_HELLO:
-		/* Do nothing */
+		if(epp_schedule_dir(msg, size) == EP_DIR_REPLY) {
+			EMDBG("Hello reply received!");
+			return net_sc_hello(net, msg, size);
+		}
 		break;
 	default:
 		EMDBG("Unknown scheduled event, type=%d", s);

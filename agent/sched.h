@@ -84,6 +84,10 @@ struct sched_context {
 /* Adds a job to a scheduler context */
 int sched_add_job(struct sched_job * job, struct sched_context * sched);
 
+/* find a precise job inside the scheduler */
+struct sched_job * sched_find_job(
+	struct sched_context * sched, unsigned int id, int type);
+
 /* Release a job which is currently scheduled by using the associated id */
 int sched_remove_job(unsigned int id, int type, struct sched_context * sched);
 

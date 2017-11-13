@@ -17,13 +17,39 @@
 
 #include <emproto.h>
 
-int epf_ho_rep(char * buf, unsigned int size)
+int epf_ho_rep(
+	char *       buf,
+	unsigned int size,
+	uint32_t     origin_eNB,
+	uint16_t     origin_pci,
+	uint16_t     origin_rnti,
+	uint16_t     target_rnti)
 {
+	ep_ho_rep * rep = (ep_ho_rep *)buf;
+
+	rep->origin_eNB  = htonl(origin_eNB);
+	rep->origin_pci  = htons(origin_pci);
+	rep->origin_rnti = htons(origin_rnti);
+	rep->target_rnti = htons(target_rnti);
+
 	return sizeof(ep_ho_rep);
 }
 
-int epp_ho_rep(char * buf, unsigned int size)
+int epp_ho_rep(
+	char *       buf,
+	unsigned int size,
+	uint32_t *   origin_eNB,
+	uint16_t *   origin_pci,
+	uint16_t *   origin_rnti,
+	uint16_t *   target_rnti)
 {
+	ep_ho_rep * rep = (ep_ho_rep *)buf;
+
+	*origin_eNB  = ntohl(rep->origin_eNB);
+	*origin_pci  = ntohs(rep->origin_pci);
+	*origin_rnti = ntohs(rep->origin_rnti);
+	*target_rnti = ntohs(rep->target_rnti);
+
 	return EP_SUCCESS;
 }
 
@@ -102,7 +128,7 @@ int epf_single_ho_rep_fail(
 		EP_OPERATION_FAIL,
 		EP_DIR_REPLY);
 
-	ms += epf_ho_rep(buf + ms, size - ms);
+	ms += epf_ho_rep(buf + ms, size - ms, 0, 0, 0, 0);
 	epf_msg_length(buf, size, ms);
 
 	return ms;
@@ -132,7 +158,7 @@ int epf_single_ho_rep_ns(
 		EP_OPERATION_NOT_SUPPORTED,
 		EP_DIR_REPLY);
 
-	ms += epf_ho_rep(buf + ms, size - ms);
+	ms += epf_ho_rep(buf + ms, size - ms, 0, 0, 0, 0);
 	epf_msg_length(buf, size, ms);
 
 	return ms;
@@ -143,7 +169,11 @@ int epf_single_ho_rep(
 	unsigned int size,
 	uint32_t     enb_id,
 	uint16_t     cell_id,
-	uint32_t     mod_id)
+	uint32_t     mod_id,
+	uint32_t     origin_eNB,
+	uint16_t     origin_pci,
+	uint16_t     origin_rnti,
+	uint16_t     target_rnti)
 {
 	int ms = 0;
 
@@ -162,17 +192,34 @@ int epf_single_ho_rep(
 		EP_OPERATION_SUCCESS,
 		EP_DIR_REPLY);
 
-	ms += epf_ho_rep(buf + ms, size - ms);
+	ms += epf_ho_rep(
+		buf + ms,
+		size - ms,
+		origin_eNB,
+		origin_pci,
+		origin_rnti,
+		target_rnti);
+
 	epf_msg_length(buf, size, ms);
 
 	return ms;
 }
 
-int epp_single_ho_rep(char * buf, unsigned int  size)
+int epp_single_ho_rep(
+	char *       buf,
+	unsigned int size,
+	uint32_t *   origin_eNB,
+	uint16_t *   origin_pci,
+	uint16_t *   origin_rnti,
+	uint16_t *   target_rnti)
 {
 	return epp_ho_rep(
 		buf + sizeof(ep_hdr) + sizeof(ep_s_hdr),
-		size);
+		size,
+		origin_eNB,
+		origin_pci,
+		origin_rnti,
+		target_rnti);
 }
 
 int epf_single_ho_req(

@@ -265,6 +265,23 @@ int sched_add_job(struct sched_job * job, struct sched_context * sched) {
 	return status;
 }
 
+struct sched_job * sched_find_job(
+	struct sched_context * sched, unsigned int id, int type)
+{
+	struct sched_job * job = 0;
+
+	pthread_spin_lock(&sched->lock);
+	list_for_each_entry(job, &sched->jobs, next) {
+		if(job->id == id && job->type == type) {
+			pthread_spin_unlock(&sched->lock);
+			return job;
+		}
+	}
+	pthread_spin_unlock(&sched->lock);
+
+	return 0;
+}
+
 int sched_perform_job(
 	struct agent * a, struct sched_job * job, struct timespec * now) {
 

@@ -45,6 +45,13 @@ ep_dir_type epp_schedule_dir(char * buf, unsigned int size)
 	return (ep_dir_type)h->dir;
 }
 
+uint32_t epp_sched_interval(char * buf, unsigned int size)
+{
+	ep_c_hdr * h = (ep_c_hdr *)(buf + sizeof(ep_hdr));
+
+	return ntohl(h->interval);
+}
+
 ep_act_type epp_schedule_type(char * buf, unsigned int size)
 {
 	ep_c_hdr * h = (ep_c_hdr *)(buf + sizeof(ep_hdr));

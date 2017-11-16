@@ -40,7 +40,7 @@ int epf_uemeas_rep(
 		}
 	}
 
-	return sizeof(ep_uemeas_rep) + (sizeof(ep_uemeas_det) * (i + 1));
+	return sizeof(ep_uemeas_rep) + (sizeof(ep_uemeas_det) * i);
 }
 
 int epp_uemeas_rep(

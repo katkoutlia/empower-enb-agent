@@ -24,12 +24,10 @@ int epf_macrep_rep(
 {
 	ep_macrep_rep * rep = (ep_macrep_rep *)buf;
 
-	rep->DL_prbs_avg    = htons(report->DL_prbs_avg);
-	rep->DL_prbs_in_use = report->DL_prbs_in_use;
+	rep->DL_prbs_used   = htonl(report->DL_prbs_used);
 	rep->DL_prbs_total  = report->DL_prbs_total;
 
-	rep->UL_prbs_avg    = htons(report->UL_prbs_avg);
-	rep->UL_prbs_in_use = report->UL_prbs_in_use;
+	rep->UL_prbs_used   = htonl(report->UL_prbs_used);
 	rep->UL_prbs_total  = report->UL_prbs_total;
 
 	return sizeof(ep_macrep_rep);
@@ -42,12 +40,10 @@ int epp_macrep_rep(
 {
 	ep_macrep_rep * rep = (ep_macrep_rep *)buf;
 
-	rep->DL_prbs_avg    = ntohs(report->DL_prbs_avg);
-	rep->DL_prbs_in_use = report->DL_prbs_in_use;
+	rep->DL_prbs_used   = ntohl(report->DL_prbs_used);
 	rep->DL_prbs_total  = report->DL_prbs_total;
 
-	rep->UL_prbs_avg    = ntohs(report->UL_prbs_avg);
-	rep->UL_prbs_in_use = report->UL_prbs_in_use;
+	rep->UL_prbs_used   = ntohl(report->UL_prbs_used);
 	rep->UL_prbs_total  = report->UL_prbs_total;
 
 	return EP_SUCCESS;

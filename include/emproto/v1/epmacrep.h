@@ -34,11 +34,9 @@ extern "C"
 
 typedef struct __ep_cell_mac_report_reply {
 	uint8_t  DL_prbs_total;
-	uint8_t  DL_prbs_in_use;
-	uint16_t DL_prbs_avg;
+	uint32_t DL_prbs_used;
 	uint8_t  UL_prbs_total;
-	uint8_t  UL_prbs_in_use;
-	uint16_t UL_prbs_avg;
+	uint32_t UL_prbs_used;
 }__attribute__((packed)) ep_macrep_rep;
 
 typedef struct __ep_cell_mac_report_request {
@@ -51,11 +49,9 @@ typedef struct __ep_cell_mac_report_request {
 
 typedef struct ep_cell_mac_report_details {
 	uint8_t  DL_prbs_total;
-	uint8_t  DL_prbs_in_use;
-	uint16_t DL_prbs_avg;
+	uint32_t DL_prbs_used;
 	uint8_t  UL_prbs_total;
-	uint8_t  UL_prbs_in_use;
-	uint16_t UL_prbs_avg;
+	uint32_t UL_prbs_used;
 } ep_macrep_det;
 
 /******************************************************************************

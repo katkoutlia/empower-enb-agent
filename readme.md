@@ -1,29 +1,61 @@
 # EmPOWER Agent project
 
-The EmPOWER Agent (EMAge for friends) is an integrable piece of software which provides the 'slave' counterpart in the controller-agent communication of EmPOWER. EMAge is technology agnostic: this means that it does not depends on a particular implementation of LTE stack, but can be integrated with any custom software. Just a minimal modification of the stack itself is necessary in order to have the agent working (see documentation for more information).
+The EmPOWER eNB Agent, as the name says, is a component of the EmPOWER NOS (Network Operating System) which is strictly related with the LTE branch of the project. The task of this software is to provide an eNB-side (LTE base station) independent software which can communicate with the EmPOWER controller by using a set of protocols crafted for this particular job.
+
+The Agent itself comes in the shape of a (shared) library which must be included in the Base Station, or in the software which communicates with it. The Agent must be interfaced with the eNB through the implementation of a set of functionalities that will be passed to it (the Agent) during its bootstrap (we call this part the "wrapper").
+
+There are no restrictions on the wrapper implementation, and you are free to choose the strategy which better fit the implementation of your Base Station. Some example on how the Agent can be integrated can be found in the **srsLTE** repository (example of integration in a real eNB software) and in the **EMBase** repository (example of integration in a virtualized eNB software, a simulator).
 
 ### Compatibility
 This software has been developed and tested for Linux.
 
+## Installing from source
+
 ### Pre-requisites
-In order to successfully build EMAge you need:
+
+The first steps, in order to proceed with the correct compilation of the software, is to download the pre-requisites for the Agent. This software comes with minimal impact on your system, and already contains all the important elements necessary for it to correctly operate. Currently there are only few requirements, and probably is something you already have on your system:
+
 * Linux standard build suite (GCC, LD, AR, etc...).
 * Pthread library, necessary to handle multithreading.
+* EmPOWER eNB protocol library (see the repository **empower-enb-proto**).
 
-### Organization of the software
-The software comes separated in two parts:
-* **The agent library:** this is the logic of the project and provides the abstraction layer used by the LTE stack to communicate with the controller. To include the agent in a project you also need the next component.
-* **The protocols library**: this is the syntax of how agent and controller communicate between each others. 
+These steps can be performed on any Linux distribution with the command:
 
-### Build instructions
-In order to use EMAge the necessary steps to do are:
-* Fork the repository on your account.
-* Clone your repository.
-* Build the protocols used for network communication by invoking the `make` command inside the proto directory (will be built as a shared library by default).
-* Install the protocols library in your system by invoking the `make install` command. This will install both the library and the necessary headers; libraries will be located in `/usr/lib`, headers in `/usr/include/emage`.
-* Build the agent by invoking the `make` command inside the agent directory (will be built as shared library by default).
-* Install the agent library in your system by invoking the `make install` command. This will install both the library and the necessary headers; libraries will be located in `/usr/lib`, headers in `/usr/include/emage`.
-* Include both the libraries when you are embedding the agent in your project, by extending the linking phase with `-lemagent` and `-lemproto`.
+`sudo apt-get install build-essential libpthread-stubs0-dev`
+
+Note that you will need super-user right to install the additional software.
+
+### Compile
+
+The eNB Agent compilation uses Makefiles to perform all the necessary stages to obtain the shared library. The Makefile itself is kept minimal in order to simplify any modification that need to be applied on it. The library can be compiled with different flavour, depending in which modes you want it to operate.
+
+In order to compile the Agent to run normally within the Base station subsystem run:
+
+`make`
+
+If you desire to inspect/debug the Agent internals, you can compile the library in "debug mode":
+
+`make debug`
+
+Finally, if you desire even more verbosity while debugging (see the RAW messages sent), you can run:
+
+`make verbose`
+
+### Installation/removal from the system
+
+By default the compilation stages does not install the library in your system, but just compile and prepare it to be included in your project. If you desire to install it within your standard libraries, you need to run the following command (run as super user if you don't have the `sudo` utility):
+
+`sudo make install`
+
+This will copy the shared library within the `/usr/lib` folder. By doing this, you will be able to include the Agent in your projects just by compiling it with the additional flag `-lemagent`. 
+
+The second action taken by the install command is copying the headers of the Agent inside `/usr/include/emage` folder. This will allows your projects to reach the Agent definitions from within your code by including the Agent header as it follows: `#include <emage/emage.h>`.
+
+In the case where EmPOWER Software is no more necessary for your Base station, you can uninstall the suite from your system by running (as super user if you don't have the `sudo` utility):
+
+`sudo make uninstall`
+
+This will revert the changes done by the installation steps, removing the library and the headers previously installed in your system.
 
 ### License
 The code is released under the Apache License, Version 2.0.

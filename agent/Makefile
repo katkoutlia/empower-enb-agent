@@ -14,20 +14,14 @@
 #
 
 #
-# Makefile to compile the Emage agent as a library.
+# Makefile to compile the EMAge agent as a library.
 #
 
 CC=gcc
 
 AGENTP=.
 
-#
-# You can personalize these variables if you want a sandboxed installation.
-#
-INSTDIR=/usr/lib
-INCLDIR=/usr/include/emage
-
-LIBS=-lpthread -lprotobuf-c
+LIBS=-lpthread -lemproto
 INCLUDES=-I../include
 
 all:

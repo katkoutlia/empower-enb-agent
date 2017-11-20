@@ -23,7 +23,7 @@
 #include <pthread.h>
 
 #include <emlog.h>
-#include <emproto.h>
+#include <emage/emproto.h>
 
 #include "triggers.h"
 

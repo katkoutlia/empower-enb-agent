@@ -42,7 +42,7 @@
 #include "net.h"
 #include "sched.h"
 
-#include <emproto.h>
+#include <emage/emproto.h>
 
 /* For the first run only. */
 int initialized = 0;

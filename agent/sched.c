@@ -24,7 +24,7 @@
 
 #include <emage.h>
 #include <emlog.h>
-#include <emproto.h>
+#include <emage/emproto.h>
 
 #include "agent.h"
 #include "sched.h"

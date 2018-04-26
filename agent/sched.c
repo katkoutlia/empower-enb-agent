@@ -219,13 +219,32 @@ int sched_perform_hello(struct agent * a, struct sched_job * job) {
 	int blen = 0;
 	int sent = 0;
 	int ret  = JOB_CONSUMED;
-
+	EMLOG("sched_perform_hello");
 	blen = epf_sched_hello_req(
 		buf, EM_BUF_SIZE, a->b_id, 0, 0, job->elapse ,0);
 	ret  = sched_send_msg(a, buf, blen);
 
 	return ret;
 }
+
+/******************************************************************************
+ * ADD HOLA:                                                        *
+ ******************************************************************************/
+int sched_perform_hola(struct agent * a, struct sched_job * job) {
+	char buf[EM_BUF_SIZE];
+	int blen = 0;
+	int sent = 0;
+	int ret  = JOB_CONSUMED;
+	EMLOG("sched_perform_hola");
+	blen = epf_sched_hola_req(
+		buf, EM_BUF_SIZE, a->b_id, 0, 0, job->elapse ,0);
+	ret  = sched_send_msg(a, buf, blen);
+
+	return ret;
+}
+/******************************************************************************
+ *                                                   *
+ ******************************************************************************/
 
 int sched_release_job(struct sched_job * job)
 {
@@ -301,6 +320,9 @@ int sched_perform_job(
 		break;
 	case JOB_TYPE_HELLO:
 		status = sched_perform_hello(a, job);
+		break;
+	case JOB_TYPE_HOLA:
+		status = sched_perform_hola(a, job);
 		break;
 	case JOB_TYPE_ENB_SETUP:
 		status = sched_perform_enb_setup(a, job);

@@ -91,6 +91,7 @@ int net_connected(struct net_context * net) {
 	struct sched_job * h = 0;
 
 	EMDBG("Connected to controller %s:%d", net->addr, net->port);
+	EMDBG("net_connected\n");
 	net->status = EM_STATUS_CONNECTED;
 
 	h = malloc(sizeof(struct sched_job));
@@ -111,6 +112,40 @@ int net_connected(struct net_context * net) {
 
 	return 0;
 }
+
+/******************************************************************************
+ * MY Code - hola start                                             *
+ ******************************************************************************/
+
+/* Common operations done when it successfully connects again. */
+int net_connected_hola(struct net_context * net) {
+
+
+	struct agent * a = container_of(net, struct agent, net);
+	struct sched_job * h = 0;
+	EMDBG("Connected to controller %s:%d", net->addr, net->port);
+	EMDBG("net_connected_hola\n");
+	net->status = EM_STATUS_CONNECTED;
+
+	h = malloc(sizeof(struct sched_job));
+
+	if(!h) {
+		EMLOG("No more memory!");
+		return -1;
+	}
+
+	INIT_LIST_HEAD(&h->next);
+	h->id         = 0;
+	h->elapse     = 2000;
+	h->type       = JOB_TYPE_HOLA;
+	h->reschedule = -1;
+
+	/* Add the Hola message. */
+	sched_add_job(h, &a->sched);
+
+	return 0;
+}
+
 
 unsigned int net_next_seq(struct net_context * net) {
 	int ret = 0;
@@ -303,7 +338,7 @@ int net_sc_hello(struct net_context * net, char * msg, int size)
 	uint32_t           intv;
 
 	EMDBG("Schedule message Hello");
-
+	EMDBG("net_sc_hello\n");
 	/* Find the Hello job and change its interval */
 	j = sched_find_job(&a->sched, 0, JOB_TYPE_HELLO);
 
@@ -314,6 +349,31 @@ int net_sc_hello(struct net_context * net, char * msg, int size)
 
 	return 0;
 }
+
+
+/******************************************************************************
+ * MYCODE HOLA .                                               *
+ ******************************************************************************/
+
+int net_sc_hola(struct net_context * net, char * msg, int size)
+{
+	struct sched_job * j;
+	struct agent *     a = container_of(net, struct agent, net);
+	uint32_t           intv;
+	EMDBG("Schedule message Hola");
+	EMDBG("net_sc_hola\n");
+
+	/* Find the Hola job and change its interval */
+	j = sched_find_job(&a->sched, 0, JOB_TYPE_HOLA);
+
+	if(j) {
+		intv      = epp_sched_interval(msg, size);
+		j->elapse = intv;
+	}
+
+	return 0;
+}
+
 
 int net_se_cell_setup(struct net_context * net, char * msg, int size)
 {
@@ -460,6 +520,7 @@ int net_te_mac_report(struct net_context * net, char * msg, int size)
 int net_process_sched_event(
 	struct net_context * net, char * msg, unsigned int size)
 {
+	EMDBG("net_process_sched_event\n");
 	ep_act_type s = epp_schedule_type(msg, size);
 
 	if(s == EP_ACT_INVALID) {
@@ -474,6 +535,12 @@ int net_process_sched_event(
 			return net_sc_hello(net, msg, size);
 		}
 		break;
+    case EP_ACT_HOLA:
+        if(epp_schedule_dir(msg, size) == EP_DIR_REPLY) {
+			EMDBG("Hola reply received!");
+			return net_sc_hola(net, msg, size);
+		}
+        break;
 	default:
 		EMDBG("Unknown scheduled event, type=%d", s);
 		break;
@@ -616,6 +683,8 @@ next:
 
 			if(net_connect_to_controller(net) == 0) {
 				net_connected(net);
+				net_connected_hola(net);
+
 			}
 
 			/* Relax the CPU. */
@@ -742,3 +811,6 @@ int net_stop(struct net_context * net)
 
 	return 0;
 }
+
+
+
